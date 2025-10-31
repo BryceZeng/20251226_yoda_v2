@@ -1,0 +1,51 @@
+# This is a Databricks asset bundle definition for asset_bundle.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+ name: pacs-743-mlops_template
+
+variables:
+  folder_name:
+    default: ''
+
+include:
+  - ./../../Workflows/workflow-yaml/*.yaml
+  - ./../../Workflows/workflow-yaml/*.yml
+  - ./../../Workflows/dev-commons/*.yml
+
+targets:
+  dev:
+    mode: production
+    default: false
+
+    workspace:
+      root_path: ${var.folder_name}
+      file_path: ${var.folder_name}
+    permissions:
+      - user_name: ${workspace.current_user.userName}
+        level: CAN_MANAGE
+    # run_as:
+    #   user_name: ${workspace.current_user.userName}
+  uat:
+    mode: production
+    default: false
+
+    workspace:
+      root_path: ${var.folder_name}
+      file_path: ${var.folder_name}
+    permissions:
+      - user_name: ${workspace.current_user.userName}
+        level: CAN_MANAGE
+    # run_as:
+    #   user_name: ${workspace.current_user.userName}
+  prod:
+    mode: production
+    default: false
+
+    workspace:
+      root_path: ${var.folder_name}
+      file_path: ${var.folder_name}
+    permissions:
+      - user_name: ${workspace.current_user.userName}
+        level: CAN_MANAGE
+    # run_as:
+    #   user_name: ${workspace.current_user.userName}

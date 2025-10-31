@@ -1,0 +1,38 @@
+variables:
+    TASK_KEY:
+       default: DEFAULT
+    SCHEMA:
+       default: DEFAULT
+    CATALOG:
+       default: ai_engineering
+
+    GIT_URL:
+        description: "Git url"
+        default: "https://github.com/pru-pacs/pacs-743-ai_engineering_feature_engineering.git"
+
+    GIT_BRANCH:
+      description: "Git branch"
+      default: "feature/gitops_setup"  # Update this from "develop"
+
+    ENVIRONMENT:
+      description: "Environment"
+      default: "dev"
+
+    WAREHOUSE_ID:
+      description: "Resolve warehouse ID from warehouse name"
+      lookup:
+        warehouse: "BI-Compute"
+
+    WORKFLOW_STANDARD_TAGS:
+      description: Standard tags used for Feature Store workflow
+      type: complex
+      default:
+        department: AI
+        environment: ${var.ENVIRONMENT}
+        last_update: n/a
+        project: FeatureStore
+        scope: FeatureEngineering
+    cluster_id:
+      description: "Resolve cluster ID from cluster name"
+      lookup:
+        cluster: "AIE_PROD_APC_GENAI"

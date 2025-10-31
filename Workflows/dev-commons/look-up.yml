@@ -1,0 +1,38 @@
+variables:
+    TASK_KEY:
+       default: feature_engineering
+    SCHEMA:
+       default: dev_feature_store
+    CATALOG:
+       default: ai_engineering
+
+    GIT_URL:
+        description: "Git url"
+        default: "https://github.com/pru-pacs/pacs-743-mlops_template.git"
+
+    GIT_BRANCH:
+      description: "Git branch"
+      default: "feature/gitops_setup"
+
+    ENVIRONMENT:
+      description: "Environment"
+      default: "dev"
+
+    WAREHOUSE_ID:
+      description: "Resolve warehouse ID from warehouse name"
+      lookup:
+        warehouse: "BI-Compute"
+
+    WORKFLOW_STANDARD_TAGS:
+      description: Standard tags used for Feature Store workflow
+      type: complex
+      default:
+        department: AI
+        environment: ${var.ENVIRONMENT}
+        last_update: n/a
+        project: DEFAULT
+        scope: DEFAULT
+    cluster_id:
+      description: "Resolve cluster ID from cluster name"
+      lookup:
+        cluster: "AIE_PROD_APC_GENAI"
