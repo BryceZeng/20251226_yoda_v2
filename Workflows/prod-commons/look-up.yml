@@ -1,0 +1,69 @@
+variables:
+    TASK_KEY :
+      default: feature_engineering
+    SCHEMA:
+      default: feature_store
+    CATALOG:
+      default: ai_engineering
+
+    GIT_URL:
+        description: "Git url"
+        default: "https://github.com/pru-pacs/pacs-743-ai_engineering_feature_engineering.git"
+
+    GIT_BRANCH:
+      description: "Git branch"
+      default: "main"
+
+    ENVIRONMENT:
+      description: "Environment"
+      default: "prod"
+
+    WAREHOUSE_ID:
+      description: "Resolve warehouse ID from warehouse name"
+      lookup:
+        warehouse: "AI-Compute"
+
+    WORKFLOW_STANDARD_TAGS:
+      description: Standard tags used for Feature Store workflow
+      type: complex
+      default:
+        department: AI
+        environment: ${var.ENVIRONMENT}
+        last_update: n/a
+        project: DEFAULT
+        scope: DEFAULT
+
+    cluster_id:
+      description: "Resolve cluster ID from cluster name"
+      lookup:
+        cluster: "Unity Catalog"
+
+    # cluster_configs:
+    #    default:
+    #         spark_version: 14.3.x-scala2.12
+    #         spark_conf:
+    #           spark.driver.extraJavaOptions: -XX:-UseParallelGC -XX:+UseG1GC
+    #           spark.databricks.delta.preview.enabled: "true"
+    #           spark.network.timeout: "720"
+    #           spark.sql.broadcastTimeout: "1200"
+    #           spark.executor.heartbeat: "60"
+    #           spark.databricks.libraries.enableMavenResolution: "false"
+    #         azure_attributes:
+    #           first_on_demand: 1
+    #           availability: ON_DEMAND_AZURE
+    #           spot_bid_max_price: -1
+    #         node_type_id: Standard_D4ds_v5
+    #         driver_node_type_id: Standard_D4ds_v5
+    #         custom_tags:
+    #           Division: AI
+    #           Billing: FeatureStore
+    #           Project: FeatureStore
+    #         spark_env_vars:
+    #           PYSPARK_PYTHON: /databricks/python3/bin/python3
+    #         data_security_mode: USER_ISOLATION
+    #         runtime_engine: STANDARD
+    #         kind: CLASSIC_PREVIEW
+    #         is_single_node: false
+    #         autoscale:
+    #           min_workers: 1
+    #           max_workers: 3
