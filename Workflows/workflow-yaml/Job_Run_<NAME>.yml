@@ -28,15 +28,20 @@ resources:
       tasks:
         - task_key: Job_to_run
           notebook_task:
-            notebook_path: ADB/NOTEBOOKS/src/pipelines/inference
-            source: GIT
-          existing_cluster_id: ${var.cluster_id}
-          # job_cluster_key: job_cluster
+        notebook_path: ADB/NOTEBOOKS/src/pipelines/inference
+        source: GIT
+        existing_cluster_id: ${var.cluster_id}
+        # job_cluster_key: job_cluster
+      - task_key: python_task
+        python_task:
+        python_file: ADB/NOTEBOOKS/src/pipelines/inference.py
+        source: GIT
+        existing_cluster_id: ${var.cluster_id}
       git_source:
-        git_url: https://github.com/pru-pacs/pacs-743-mlops_template.git
-        git_provider: gitHub
+      git_url: https://github.com/pru-pacs/pacs-743-mlops_template.git
+      git_provider: gitHub
       queue:
-        enabled: true
+      enabled: true
 
 
 targets:
@@ -77,7 +82,7 @@ targets:
           tasks:
             - task_key: inference_job
               notebook_task:
-                notebook_path: /Shared/ai_engineering_feature_engineering/src/pipelines/inference
+                notebook_path: /Workspace/${var.project_name}/ADB/NOTEBOOKS/src/prd/pipelines/inference
                 source: WORKSPACE
               existing_cluster_id: ${var.cluster_id}
 
@@ -93,6 +98,6 @@ targets:
           tasks:
             - task_key: training_job
               notebook_task:
-                notebook_path: /Shared/ai_engineering_feature_engineering/src/training/model_v1
+                notebook_path: /Workspace/${var.project_name}/ADB/NOTEBOOKS/src/prd/training/model_v1
                 source: WORKSPACE
               existing_cluster_id: ${var.cluster_id}
