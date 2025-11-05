@@ -1,0 +1,47 @@
+name: Caller Workflow
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+
+jobs:
+    ## move the secrets to org level , remove from repo level
+    call-main:
+      if: github.ref == 'refs/heads/main'
+      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml@main
+      with:
+        ENVIRONMENT: prod
+        PROJECT_NAME: pacs-743-ai_engineering_feature_engineering
+        FOLDER_NAME: /Workspace/Shared/ai_engineering_feature_engineering
+        RUNNER: prod-runner
+      secrets:
+              TOKEN: ${{ secrets.PERSONAL_PRD2_ACCESS_TOKEN }}
+              HOST : ${{secrets.DATABRICKS_PRD2_HOST}}
+              GIT_TOKEN : ${{secrets.GIT_TOKEN}}
+
+    call-develop:
+      if: github.ref == 'refs/heads/develop'
+      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml@main
+      with:
+        ENVIRONMENT: dev
+        PROJECT_NAME: p${var.project_name}
+        FOLDER_NAME: /Workspace/${var.project_name}
+        RUNNER: prod-runner
+      secrets:
+              TOKEN: ${{ secrets.PERSONAL_PRD2_ACCESS_TOKEN }}
+              HOST : ${{secrets.DATABRICKS_PRD2_HOST}}
+              GIT_TOKEN : ${{secrets.GIT_TOKEN}}
+    call-feature:
+      if: github.ref == 'refs/heads/feature/gitops_setup'
+      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml@main
+      with:
+        ENVIRONMENT: dev
+        PROJECT_NAME: ${var.project_name}
+        FOLDER_NAME: /Workspace/${var.project_name}
+        RUNNER: prod-runner
+      secrets:
+              TOKEN: ${{ secrets.PERSONAL_APE_ACCESS_TOKEN }}
+              HOST : https://adb-6397263301685530.10.azuredatabricks.net
+              GIT_TOKEN : ${{secrets.GIT_TOKEN}}
