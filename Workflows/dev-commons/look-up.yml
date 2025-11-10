@@ -15,6 +15,10 @@ variables:
       default: pru.pac_mlops.trip_dropoff_features
    EXPERIMENT_NAME:
       default: /dev-pac_mlops-experiment
+   INFERENCE_INPUT_TABLE:
+      default: pru.pac_mlops.feature_store_inference_input
+   OUTPUT_PREDICTION_TABLE:
+      default: pru.pac_mlops.predictions
   
 
    GIT_URL:
