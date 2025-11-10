@@ -46,7 +46,7 @@ jobs:
         run: echo "Running on ${{ runner.os }}"
 
 
-    # runs-on: pru-pacs-all-prod-linux-runner-01 #pru-pacs-all-nprd-linux-runner-01  # udp-win-nprd # Specify the label of your existing runner
+    # runs-on: pru-pacs-all-prod-linux-runner-01 #pru-pacs-all-nprd-linux-runner-01  # udp-win-nprd # Specify the label of your existing runners
 
     # steps:
       - name: Validate the parameters
@@ -101,34 +101,23 @@ jobs:
             sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}/" databricks.yml
             sed -i "s/Workflows\/commons.*/Workflows\/${DEPLOYMENT_ENVIRONMENT}\-commons\/\*\.yml/" databricks.yml
             cat   databricks.yml
-            cp -f ./databricks.yml ./ADB/NOTEBOOKS/.
-            echo '----------Display the final template file-------------------'
-            cat ./ADB/NOTEBOOKS/databricks.yml
-            echo '----------End Of Display the final template file-------------------'
 
-      - name: switch directory
-        run: |
-          cd ADB/NOTEBOOKS 
-          ls -lrt 
       - name: validate Databricks
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
-          cd ADB/NOTEBOOKS 
           databricks bundle validate -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --output json
       - name: summarize Databricks deployment
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
-          cd ADB/NOTEBOOKS 
           databricks bundle summary -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}"           
       - name: deploy Databricks
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
-          cd ADB/NOTEBOOKS 
           databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock
           

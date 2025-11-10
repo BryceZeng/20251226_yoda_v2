@@ -1,26 +1,11 @@
 # This is a Databricks asset bundle definition for asset_bundle.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 bundle:
- name: pacs-743-mlops_template
+ name: project_name
 
 variables:
   folder_name:
     default: ''
-  experiment_name:
-    description: Experiment name for the model training.
-    default: /Users/shared/${bundle.target}-pac_mlops-experiment_new
-  model_name:
-    description: Model name for the model training.
-    default: pac_mlops-model
-  catalog_name:
-    description: The catalog name to save the trained model
-    default: pru
-  schema_name:
-    description: The schema name to save the trained model
-    default: mlops
-  cluster_id:
-    description: Existing cluster ID to use for jobs
-    default: 1103-113443-an0df16c
 
 include:
   - ./Workflows/dev-commons/*.yml
@@ -37,7 +22,7 @@ targets:
     workspace:
       host: https://adb-6606049009534411.11.azuredatabricks.net/
       # root_path: /Users/${workspace.current_user.userName}/pac_mlops
-      root_path: /shared/pac_mlops_new
+      root_path: /shared/pac_mlops_github
       # root_path: ${var.folder_name}
       # file_path: ${var.folder_name}
     permissions:

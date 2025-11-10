@@ -10,7 +10,7 @@ jobs:
     ## move the secrets to org level , remove from repo level
     call-main:
       if: github.ref == 'refs/heads/main'
-      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml@main
+      uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: prod
         PROJECT_NAME: pacs-743-model-deployment-template
@@ -23,11 +23,11 @@ jobs:
 
     call-develop:
       if: github.ref == 'refs/heads/develop'
-      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml@main
+      uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: dev
-        PROJECT_NAME: p${var.project_name}
-        FOLDER_NAME: /Workspace/${var.project_name}
+        PROJECT_NAME: pacs-743-model-deployment-template
+        FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
         RUNNER: prod-runner
       secrets:
               TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
@@ -38,8 +38,8 @@ jobs:
       uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: dev
-        PROJECT_NAME: ${var.project_name}
-        FOLDER_NAME: /Workspace/${var.project_name}
+        PROJECT_NAME: pacs-743-model-deployment-template
+        FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
         RUNNER: prod-runner
       secrets:
               TOKEN: ${{ secrets.PERSONAL_APE_ACCESS_TOKEN }}
