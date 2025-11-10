@@ -28,7 +28,7 @@ jobs:
         ENVIRONMENT: dev
         PROJECT_NAME: pacs-743-model-deployment-template
         FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
-        RUNNER: prod-runner
+        RUNNER: dev-runner
       secrets:
               TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
