@@ -1,0 +1,49 @@
+new_cluster: &new_cluster
+  new_cluster:
+    num_workers: 3
+    spark_version: 15.3.x-cpu-ml-scala2.12
+    node_type_id: Standard_DS3_v2
+    data_security_mode: "SINGLE_USER"
+    custom_tags:
+      clusterSource: mlops-stacks_0.4
+
+common_permissions: &permissions
+  permissions:
+    - level: CAN_VIEW
+      group_name: users
+
+resources:
+  jobs:
+    model_training_job:
+      name: ${bundle.target}-pac_mlops-model-training-job
+      job_clusters:
+        - job_cluster_key: model_training_job_cluster
+          <<: *new_cluster
+      tasks:
+        - task_key: Train
+        # job_cluster_key: write_feature_table_job_cluster
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ../../ADB/NOTEBOOKS/src/prd/training/TrainWithFeatureStore.py
+            base_parameters:
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+        - task_key: ChallengerValidation
+        # job_cluster_key: write_feature_table_job_cluster
+          existing_cluster_id: ${var.cluster_id}
+          depends_on:
+            - task_key: Train
+          notebook_task:
+            notebook_path: ../../ADB/NOTEBOOKS/src/prd/validation/challenger_validation.py
+            base_parameters:
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+      schedule:
+        quartz_cron_expression: "0 0 9 * * ?" # daily at 9am
+        timezone_id: UTC
+      <<: *permissions
+      # If you want to turn on notifications for this job, please uncomment the below code,
+      # and provide a list of emails to the on_failure argument.
+      #
+      #  email_notifications:
+      #    on_failure:
+      #      - first@company.com
+      #      - second@company.com

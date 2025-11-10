@@ -1,0 +1,38 @@
+new_cluster: &new_cluster
+  new_cluster:
+    num_workers: 3
+    spark_version: 15.3.x-cpu-ml-scala2.12
+    node_type_id: Standard_DS3_v2
+    data_security_mode: "SINGLE_USER"
+    custom_tags:
+      clusterSource: mlops-stacks_0.4
+
+common_permissions: &permissions
+  permissions:
+    - level: CAN_VIEW
+      group_name: users
+
+resources:
+  jobs:
+    batch_inference_job:
+      name: ${bundle.target}-pac_mlops-batch-inference-job
+      tasks:
+        - task_key: batch_inference_job
+          existing_cluster_id: ${var.cluster_id}
+          # <<: *new_cluster
+          notebook_task:
+            notebook_path: ../../ADB/NOTEBOOKS/src/prd/inference/BatchInference.py
+            base_parameters:
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+
+      schedule:
+        quartz_cron_expression: "0 0 11 * * ?" # daily at 11am
+        timezone_id: UTC
+      <<: *permissions
+      # If you want to turn on notifications for this job, please uncomment the below code,
+      # and provide a list of emails to the on_failure argument.
+      #
+      #  email_notifications:
+      #    on_failure:
+      #      - first@company.com
+      #      - second@company.com
