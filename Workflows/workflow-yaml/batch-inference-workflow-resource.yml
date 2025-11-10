@@ -18,8 +18,8 @@ resources:
       name: ${bundle.target}-pac_mlops-batch-inference-job
       tasks:
         - task_key: batch_inference_job
-          existing_cluster_id: ${var.cluster_id}
-          # <<: *new_cluster
+          # existing_cluster_id: ${var.cluster_id}
+          <<: *new_cluster
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/prd/inference/BatchInference.py
             base_parameters:

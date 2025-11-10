@@ -120,4 +120,10 @@ jobs:
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
           databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock
+      - name: run Training Job
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} model_training_job
           

@@ -21,8 +21,8 @@ resources:
           <<: *new_cluster
       tasks:
         - task_key: Train
-        # job_cluster_key: write_feature_table_job_cluster
-          existing_cluster_id: ${var.cluster_id}
+          job_cluster_key: write_feature_table_job_cluster
+          # existing_cluster_id: ${var.cluster_id}
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/prd/training/TrainWithFeatureStore.py
             base_parameters:
