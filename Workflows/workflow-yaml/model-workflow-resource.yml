@@ -28,8 +28,8 @@ resources:
             base_parameters:
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ChallengerValidation
-        # job_cluster_key: write_feature_table_job_cluster
-          existing_cluster_id: ${var.cluster_id}
+          job_cluster_key: write_feature_table_job_cluster
+          # existing_cluster_id: ${var.cluster_id}
           depends_on:
             - task_key: Train
           notebook_task:
