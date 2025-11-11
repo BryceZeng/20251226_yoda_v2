@@ -1,58 +1,56 @@
 # This is a Databricks asset bundle definition for asset_bundle.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 bundle:
- name: project_name
+  name: project_name
 
 variables:
   folder_name:
     default: ''
 
 include:
-  - ./Workflows/dev-commons/*.yml
-  - ./Workflows/workflow-yaml/*.yml
+  - ./../../Workflows/workflow-yaml/*.yaml
+  - ./../../Workflows/workflow-yaml/*.yml
+  - ./../../Test/*.yml
+  - ./../../Workflows/commons/*.yml
 
+sync:
+  include:
+    - ./../../Workflows/commons/*.yml
 
 targets:
   dev:
     mode: production
     default: false
-    variables:
-      catalog_name: pru
-      schema_name: pac_mlops
+
     workspace:
-      host: https://adb-6606049009534411.11.azuredatabricks.net/
-      # root_path: /Users/${workspace.current_user.userName}/pac_mlops
-      root_path: /shared/pac_mlops_github
-      # root_path: ${var.folder_name}
-      # file_path: ${var.folder_name}
-    permissions:
+      root_path: ${var.folder_name}
+      file_path: ${var.folder_name}   
+    permissions:  
       - user_name: ${workspace.current_user.userName}
-        level: CAN_MANAGE
+        level: CAN_MANAGE      
     # run_as:
     #   user_name: ${workspace.current_user.userName}
-
   uat:
     mode: production
     default: false
 
     workspace:
       root_path: ${var.folder_name}
-      file_path: ${var.folder_name}
-    permissions:
+      file_path: ${var.folder_name}   
+    permissions:  
       - user_name: ${workspace.current_user.userName}
-        level: CAN_MANAGE
+        level: CAN_MANAGE      
     # run_as:
-    #   user_name: ${workspace.current_user.userName}
+    #   user_name: ${workspace.current_user.userName}              
   prod:
     mode: production
     default: false
 
     workspace:
-      host: https://adb-6606049009534411.11.azuredatabricks.net/
       root_path: ${var.folder_name}
-      file_path: ${var.folder_name}
-    permissions:
+      file_path: ${var.folder_name}   
+    permissions:  
       - user_name: ${workspace.current_user.userName}
-        level: CAN_MANAGE
+        level: CAN_MANAGE      
     # run_as:
-    #   user_name: ${workspace.current_user.userName}
+    #   user_name: ${workspace.current_user.userName}   
