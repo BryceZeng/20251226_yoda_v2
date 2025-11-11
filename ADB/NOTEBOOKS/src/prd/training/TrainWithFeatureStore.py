@@ -23,7 +23,13 @@ import numpy as np
 
 # COMMAND ----------
 
-
+dbutils.widget.text("SCHEMA",'')
+dbutils.widgets.text("CATALOG",'')
+dbutils.widgets.text("TRAINING_DATA_PATH",'')
+dbutils.widgets.text("MODEL_NAME",'')
+dbutils.widgets.text("EXPERIMENT_NAME",'')
+dbutils.widgets.text("PICKUP_FEATURES_TABLE",'')
+dbutils.widgets.text("DROP_FEATURES_TABLE",'')
 
 # COMMAND ----------
 
