@@ -27,6 +27,7 @@ resources:
             notebook_path: ../../ADB/NOTEBOOKS/src/prd/training/TrainWithFeatureStore.py
             base_parameters:
               SCHEMA: ${var.SCHEMA}
+              ENV : ${bundle.target}
               CATALOG: ${var.CATALOG}
               TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
               MODEL_NAME: ${var.MODEL_NAME}
@@ -39,10 +40,11 @@ resources:
           # existing_cluster_id: ${var.cluster_id}
           depends_on:
             - task_key: Train
-          notebook_task:
+          notebook_task: 
             notebook_path: ../../ADB/NOTEBOOKS/src/prd/validation/challenger_validation.py
             base_parameters:
               SCHEMA: ${var.SCHEMA}
+              ENV : ${bundle.target}
               CATALOG: ${var.CATALOG}
               TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
               MODEL_NAME: ${var.MODEL_NAME}
@@ -53,6 +55,7 @@ resources:
       schedule:
         quartz_cron_expression: "0 0 9 * * ?" # daily at 9am
         timezone_id: UTC
+        pause_status: PAUSED
       <<: *permissions
       # If you want to turn on notifications for this job, please uncomment the below code,
       # and provide a list of emails to the on_failure argument.

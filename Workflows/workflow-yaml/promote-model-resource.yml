@@ -14,18 +14,18 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    batch_inference_job:
-      name: ${bundle.target}-pac_mlops-batch-inference-job
+    promote_model_job:
+      name: ${bundle.target}-pac-mlops-promote-model-job
       tasks:
-        - task_key: batch_inference_job
+        - task_key: promote_model_job
           # existing_cluster_id: ${var.cluster_id}
           <<: *new_cluster
           notebook_task:
-            notebook_path: ../../ADB/NOTEBOOKS/src/prd/inference/BatchInference.py
+            notebook_path: ../../ADB/NOTEBOOKS/src/prd/promote/promote_model.py
             base_parameters:
               MODEL_NAME: ${var.MODEL_NAME}
               ENV : ${bundle.target}
-              INFERENCE_INPUT_TABLE: ${var.INFERENCE_INPUT_TABLE}
+              DEST_MODEL_NAME: ${var.DEST_MODEL_NAME}
               OUTPUT_PREDICTION_TABLE: ${var.OUTPUT_PREDICTION_TABLE}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
 

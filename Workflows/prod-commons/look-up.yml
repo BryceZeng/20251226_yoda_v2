@@ -1,14 +1,30 @@
 variables:
-    TASK_KEY :
-      default: feature_engineering
-    SCHEMA:
-      default: feature_store
-    CATALOG:
-      default: ai_engineering
+   TASK_KEY:
+      default: DEFAULT
+   SCHEMA:
+      default: pac_mlops
+   CATALOG:
+      default: pru_prod
+   TRAINING_DATA_PATH:
+      default: /Volumes/pru_prod/pac_mlops/test
+   MODEL_NAME:
+      default: pru.pac_mlops.pac_mlops-model
+   DEST_MODEL_NAME:
+      default: pru_prod.pac_mlops.pac_mlops-model
+   PICKUP_FEATURES_TABLE:
+      default: pru_prod.pac_mlops.trip_pickup_features
+   DROP_FEATURES_TABLE:
+      default: pru_prod.pac_mlops.trip_dropoff_features
+   EXPERIMENT_NAME:
+      default: /dev-pac_mlops-experiment
+   INFERENCE_INPUT_TABLE:
+      default: pru_prod.pac_mlops.feature_store_inference_input
+   OUTPUT_PREDICTION_TABLE:
+      default: pru_prod.pac_mlops.predictions
 
     GIT_URL:
         description: "Git url"
-        default: "https://github.com/pru-pacs/pacs-743-ai_engineering_feature_engineering.git"
+        default: "https://github.com/pru_prod-pacs/pacs-743-ai_engineering_feature_engineering.git"
 
     GIT_BRANCH:
       description: "Git branch"

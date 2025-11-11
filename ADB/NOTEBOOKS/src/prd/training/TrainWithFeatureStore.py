@@ -28,12 +28,18 @@ env = "dev"
 # config = pp.load_config(os.getenv("ENVIRONMENT", env))
 # print(f"Config loaded: {config}")
 schema = dbutils.widgets.get("SCHEMA")
+env = dbutils.widgets.get("ENV")
 catalog = dbutils.widgets.get("CATALOG")
 input_table_path = dbutils.widgets.get("TRAINING_DATA_PATH")
 model_name = dbutils.widgets.get("MODEL_NAME")
 experiment_name = dbutils.widgets.get("EXPERIMENT_NAME")
 pickup_features_table = dbutils.widgets.get("PICKUP_FEATURES_TABLE")
 dropoff_features_table = dbutils.widgets.get("DROP_FEATURES_TABLE")
+
+# COMMAND ----------
+
+if env == "prod":
+  dbutils.notebook.exit(0)
 
 # COMMAND ----------
 
