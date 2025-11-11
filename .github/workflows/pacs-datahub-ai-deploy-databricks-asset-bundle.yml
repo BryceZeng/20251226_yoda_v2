@@ -138,4 +138,22 @@ jobs:
         run: |
           cd ADB/NOTEBOOKS 
           databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} model_training_job
+
+      - name: Run Training Job (Dev Environment)
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS 
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} model_training_job
+          
+      - name: Run Promote Model Job (Non-Dev Environment)
+        if: inputs.ENVIRONMENT != 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS 
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} promote_model_job
           
