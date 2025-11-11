@@ -17,7 +17,7 @@ def load_config(env="dev"):
         # Try Databricks workspace path (when deployed)
         # The workspace root_path is /shared/pac_mlops_new (from databricks.yml)
         try:
-            workspace_root = '/Workspace' + dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get().split('/ADB')[0]
+            workspace_root = '/Workspace' + dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get().split('/src')[0]
             config_path = f"{workspace_root}/Workflows/{env}-commons/look-up.yml"
         except:
             # Fallback: Use relative path from current notebook location
