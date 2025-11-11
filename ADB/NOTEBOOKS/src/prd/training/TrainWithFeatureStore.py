@@ -23,27 +23,17 @@ import numpy as np
 
 # COMMAND ----------
 
-dbutils.widget.text("SCHEMA",'')
-dbutils.widgets.text("CATALOG",'')
-dbutils.widgets.text("TRAINING_DATA_PATH",'')
-dbutils.widgets.text("MODEL_NAME",'')
-dbutils.widgets.text("EXPERIMENT_NAME",'')
-dbutils.widgets.text("PICKUP_FEATURES_TABLE",'')
-dbutils.widgets.text("DROP_FEATURES_TABLE",'')
-
-# COMMAND ----------
-
 # DBTITLE 1,Notebook environment configuration variables
 env = "dev"
 # config = pp.load_config(os.getenv("ENVIRONMENT", env))
 # print(f"Config loaded: {config}")
-schema = dbutils.widget.get("SCHEMA")
-catalog = dbutils.widget.get("CATALOG")
-input_table_path = dbutils.widget.get("TRAINING_DATA_PATH")
-model_name = dbutils.widget.get("MODEL_NAME")
-experiment_name = dbutils.widget.get("EXPERIMENT_NAME")
-pickup_features_table = dbutils.widget.get("PICKUP_FEATURES_TABLE")
-dropoff_features_table = dbutils.widget.get("DROP_FEATURES_TABLE")
+schema = dbutils.widgets.get("SCHEMA")
+catalog = dbutils.widgets.get("CATALOG")
+input_table_path = dbutils.widgets.get("TRAINING_DATA_PATH")
+model_name = dbutils.widgets.get("MODEL_NAME")
+experiment_name = dbutils.widgets.get("EXPERIMENT_NAME")
+pickup_features_table = dbutils.widgets.get("PICKUP_FEATURES_TABLE")
+dropoff_features_table = dbutils.widgets.get("DROP_FEATURES_TABLE")
 
 # COMMAND ----------
 
