@@ -16,15 +16,15 @@ from mlflow.tracking.client import MlflowClient
 
 # COMMAND ----------
 
-config = pp.load_config(os.getenv("ENVIRONMENT", "dev"))
-print(f"Config loaded: {config}")
-schema = config.get("SCHEMA")
-catalog = config.get("CATALOG")
-input_table_path = config.get("TRAINING_DATA_PATH")
-model_name = config.get("MODEL_NAME")
-experiment_name = config.get("EXPERIMENT_NAME")
-pickup_features_table = config.get("PICKUP_FEATURES_TABLE")
-dropoff_features_table = config.get("DROP_FEATURES_TABLE")
+# config = pp.load_config(os.getenv("ENVIRONMENT", "dev"))
+# print(f"Config loaded: {config}")
+schema = dbutils.widgets.get("SCHEMA")
+catalog = dbutils.widgets.get("CATALOG")
+input_table_path = dbutils.widgets.get("TRAINING_DATA_PATH")
+model_name = dbutils.widgets.get("MODEL_NAME")
+experiment_name = dbutils.widgets.get("EXPERIMENT_NAME")
+pickup_features_table = dbutils.widgets.get("PICKUP_FEATURES_TABLE")
+dropoff_features_table = dbutils.widgets.get("DROP_FEATURES_TABLE")
 
 # COMMAND ----------
 
