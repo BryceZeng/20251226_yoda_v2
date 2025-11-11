@@ -100,6 +100,10 @@ jobs:
             cat ./databricks.yml
             sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}/" databricks.yml
             sed -i "s/Workflows\/commons.*/Workflows\/${DEPLOYMENT_ENVIRONMENT}\-commons\/\*\.yml/" databricks.yml
+            echo '-----Copying Workflow folders to ADB/Notebooks'
+            mkdir -p ./ADB/NOTEBOOKS/Workflows/${DEPLOYMENT_ENVIRONMENT}-commons
+            cp -r ./workflows/${DEPLOYMENT_ENVIRONMENT}-commons/* ./ADB/NOTEBOOKS/Workflows/${DEPLOYMENT_ENVIRONMENT}-commons/
+            ls -lrt ./ADB/NOTEBOOKS/Workflows/
             cat   databricks.yml
             cp -f ./databricks.yml ./ADB/NOTEBOOKS/.
             echo '----------Display the final template file-------------------'
