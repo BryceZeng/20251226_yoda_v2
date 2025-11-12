@@ -7,7 +7,6 @@
 
 # DBTITLE 1,Importing Python Libraries and Dependencies
 import os
-import helper as pp
 
 from databricks.feature_engineering import FeatureLookup
 from databricks.feature_engineering import FeatureEngineeringClient

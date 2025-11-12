@@ -9,8 +9,6 @@ import os
 from databricks.feature_engineering import FeatureLookup
 from databricks.feature_engineering import FeatureEngineeringClient
 
-import helper as pp
-
 import mlflow
 from mlflow.tracking.client import MlflowClient
 
