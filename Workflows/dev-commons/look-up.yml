@@ -9,6 +9,8 @@ variables:
       default: /Volumes/pru/pac_mlops/test
    MODEL_NAME:
       default: pru.pac_mlops.pac_mlops-model
+   DEST_MODEL_NAME:
+      default: pru_prod.pac_mlops.pac_mlops-model
    PICKUP_FEATURES_TABLE:
       default: pru.pac_mlops.trip_pickup_features
    DROP_FEATURES_TABLE:
