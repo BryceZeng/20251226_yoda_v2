@@ -13,10 +13,6 @@ include:
   - ./../../Test/*.yml
   - ./../../Workflows/commons/*.yml
 
-sync:
-  include:
-    - ./../../Workflows/commons/*.yml
-
 targets:
   dev:
     mode: production

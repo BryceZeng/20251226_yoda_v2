@@ -109,63 +109,7 @@ jobs:
       - name: switch directory
         run: |
           cd ADB/NOTEBOOKS 
-          ls -lrt
-
-      # Unit Test Deployment and Execution (Dev Only)
-      - name: Setup Unit Test Bundle Configuration (Dev Only)
-        if: inputs.ENVIRONMENT == 'dev'
-        env: 
-          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-        run: |
-          echo '----------Setting up Unit Test Bundle-------------------'
-          # Backup main databricks.yml
-          cp -f ./ADB/NOTEBOOKS/databricks.yml ./ADB/NOTEBOOKS/databricks-main.yml
-          # Copy and configure unittest bundle
-          cp -f ./databricks-unittest.yml ./ADB/NOTEBOOKS/databricks.yml
-          cd ADB/NOTEBOOKS
-          sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}_unittest/" databricks.yml
-          cat databricks.yml
-          echo '----------End of Unit Test Bundle Setup-------------------'
-
-      - name: Validate Unit Test Bundle (Dev Only)
-        if: inputs.ENVIRONMENT == 'dev'
-        env: 
-          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
-        run: |
-          cd ADB/NOTEBOOKS 
-          databricks bundle validate -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --output json
-
-      - name: Deploy Unit Test Bundle (Dev Only)
-        if: inputs.ENVIRONMENT == 'dev'
-        env: 
-          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
-        run: |
-          cd ADB/NOTEBOOKS
-          databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock
-
-      - name: Run Unit Tests (Dev Only)
-        if: inputs.ENVIRONMENT == 'dev'
-        env: 
-          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
-        run: |
-          cd ADB/NOTEBOOKS 
-          echo '----------Running Unit Tests-------------------'
-          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} unit_test_job
-          echo '----------Unit Tests Completed Successfully-------------------'
-
-      - name: Restore Main Bundle Configuration (Dev Only)
-        if: inputs.ENVIRONMENT == 'dev'
-        run: |
-          echo '----------Restoring Main Bundle Configuration-------------------'
-          cd ADB/NOTEBOOKS
-          cp -f databricks-main.yml databricks.yml
-          cat databricks.yml
-          echo '----------Main Bundle Configuration Restored-------------------'
-
-      # Main Bundle Deployment (Proceeds only if unit tests pass in dev)
+          ls -lrt 
       - name: validate Databricks
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
@@ -187,6 +131,21 @@ jobs:
         run: |
           cd ADB/NOTEBOOKS
           databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock
+
+      - name: Run Unit Tests (Dev Environment - Must Pass Before Training)
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS 
+          echo '=========================================='
+          echo 'Running Unit Tests Before Training Job'
+          echo '=========================================='
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} unit_test_job
+          echo '=========================================='
+          echo '✅ Unit Tests Passed! Proceeding with Training'
+          echo '=========================================='
 
       - name: Run Training Job (Dev Environment)
         if: inputs.ENVIRONMENT == 'dev'
