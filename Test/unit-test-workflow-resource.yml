@@ -1,0 +1,33 @@
+new_cluster: &new_cluster
+  new_cluster:
+    num_workers: 1
+    spark_version: 15.3.x-cpu-ml-scala2.12
+    node_type_id: Standard_DS3_v2
+    data_security_mode: "SINGLE_USER"
+    custom_tags:
+      clusterSource: mlops-unit-tests
+
+common_permissions: &permissions
+  permissions:
+    - level: CAN_VIEW
+      group_name: users
+
+resources:
+  jobs:
+    unit_test_job:
+      name: ${bundle.target}-pac_mlops-unit-test-job
+      job_clusters:
+        - job_cluster_key: unit_test_cluster
+          <<: *new_cluster
+      tasks:
+        - task_key: RunUnitTests
+          job_cluster_key: unit_test_cluster
+          notebook_task:
+            notebook_path: ../../ADB/NOTEBOOKS/src/prd/tests/unit_tests.py
+            base_parameters:
+              ENV: ${bundle.target}
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+      timeout_seconds: 600
+      max_retries: 0
+      <<: *permissions
+

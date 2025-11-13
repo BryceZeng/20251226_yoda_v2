@@ -109,7 +109,51 @@ jobs:
       - name: switch directory
         run: |
           cd ADB/NOTEBOOKS 
-          ls -lrt 
+          ls -lrt
+
+      # Unit Test Deployment and Execution (Dev Only)
+      - name: Setup Unit Test Bundle Configuration (Dev Only)
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+        run: |
+          echo '----------Setting up Unit Test Bundle-------------------'
+          cp -f ./databricks-unittest.yml ./ADB/NOTEBOOKS/databricks-unittest.yml
+          cd ADB/NOTEBOOKS
+          sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}_unittest/" databricks-unittest.yml
+          cat databricks-unittest.yml
+          echo '----------End of Unit Test Bundle Setup-------------------'
+
+      - name: Validate Unit Test Bundle (Dev Only)
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS 
+          databricks bundle validate -c databricks-unittest.yml -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --output json
+
+      - name: Deploy Unit Test Bundle (Dev Only)
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS
+          databricks bundle deploy -c databricks-unittest.yml -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock
+
+      - name: Run Unit Tests (Dev Only)
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS 
+          echo '----------Running Unit Tests-------------------'
+          databricks bundle run -c databricks-unittest.yml -t ${DEPLOYMENT_ENVIRONMENT} unit_test_job
+          echo '----------Unit Tests Completed Successfully-------------------'
+
+      # Main Bundle Deployment (Proceeds only if unit tests pass in dev)
       - name: validate Databricks
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
