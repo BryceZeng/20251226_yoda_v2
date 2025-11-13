@@ -1,4 +1,4 @@
-name: Common Template For Datahub Deployment
+name: Common Template For Datahub Deployments
 
 on:
   workflow_call:
