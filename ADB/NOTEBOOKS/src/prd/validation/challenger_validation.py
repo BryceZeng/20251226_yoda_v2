@@ -14,8 +14,7 @@ from mlflow.tracking.client import MlflowClient
 
 # COMMAND ----------
 
-# config = pp.load_config(os.getenv("ENVIRONMENT", "dev"))
-# print(f"Config loaded: {config}")
+
 schema = dbutils.widgets.get("SCHEMA")
 catalog = dbutils.widgets.get("CATALOG")
 env = dbutils.widgets.get("ENV")
