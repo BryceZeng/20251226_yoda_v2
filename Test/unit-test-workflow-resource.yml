@@ -27,7 +27,8 @@ resources:
             base_parameters:
               ENV: ${bundle.target}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
-      timeout_seconds: 600
-      max_retries: 0
-      <<: *permissions
+      schedule:
+        quartz_cron_expression: "0 0 11 * * ?" # daily at 11am
+        timezone_id: UTC
+        pause_status: PAUSED
 
