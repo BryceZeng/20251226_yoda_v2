@@ -31,4 +31,5 @@ resources:
         quartz_cron_expression: "0 0 11 * * ?" # daily at 11am
         timezone_id: UTC
         pause_status: PAUSED
+      <<: *permissions
 
