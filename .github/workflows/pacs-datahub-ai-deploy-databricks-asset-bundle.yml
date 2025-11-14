@@ -99,7 +99,7 @@ jobs:
             cat ./databricks.yml
             sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}/" databricks.yml
             sed -i "s/Workflows\/commons.*/Workflows\/${DEPLOYMENT_ENVIRONMENT}\-commons\/\*\.yml/" databricks.yml
-            sed -i "s/Workflows\/worflow\-yaml.*/Workflows\/test\-yaml\/\*\.yml|" databricks.yml
+            sed -i "s/Workflows\/worflow\-yaml.*/Workflows\/test\-yaml\/\*\.yml/" databricks.yml
             cat   databricks.yml
             cp -f ./databricks.yml ./ADB/NOTEBOOKS/.
             echo '----------Display the final template file-------------------'
