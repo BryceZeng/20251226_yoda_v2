@@ -146,6 +146,12 @@ jobs:
           echo '✅ Unit Tests Passed! Proceeding with Training'
           echo '=========================================='
 
+      - name: listing the databriks template file
+        run: |
+          ls -lrt shared/
+          cp -f shared/actions/pacs/datahub-ai/databricks.yml ./databricks.yml
+          cat ./databricks.yml
+
       - name: Setting up the deployment space
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
