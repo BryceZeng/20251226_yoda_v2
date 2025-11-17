@@ -15,6 +15,13 @@ on:
       RUNNER:
         type: string
         required: true
+      JOB_NAME:
+        type: string
+        required: true
+      DEPLOY_AS_MODEL:
+        type: boolean
+        required: false
+        default: false
     secrets:
        HOST:
         required: true
@@ -199,16 +206,17 @@ jobs:
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+          JOB_NAME: ${{ inputs.JOB_NAME }}
         run: |
           cd ADB/NOTEBOOKS 
-          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} model_training_job
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${JOB_NAME}
           
       - name: Run Promote Model Job (Non-Dev Environment)
-        if: inputs.ENVIRONMENT != 'dev'
+        if: inputs.ENVIRONMENT != 'dev' && inputs.DEPLOY_AS_MODEL == true
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
           cd ADB/NOTEBOOKS 
-          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} promote_model_job
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${JOB_NAME}
           
