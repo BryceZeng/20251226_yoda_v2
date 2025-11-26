@@ -18,10 +18,6 @@ on:
       JOB_NAME:
         type: string
         required: true
-      DEPLOY_AS_MODEL:
-        type: boolean
-        required: false
-        default: false
       UNIT_TEST_JOB_NAME:
         type: string
         required: false

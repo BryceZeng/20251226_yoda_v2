@@ -18,7 +18,6 @@ jobs:
         FOLDER_NAME: /Workspace/Shared/model-deployment-template_prod
         RUNNER: dev-runner
         JOB_NAME: promote_model_job
-        DEPLOY_AS_MODEL: true
       secrets:
               TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
