@@ -33,6 +33,7 @@ jobs:
         FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
         RUNNER: dev-runner
         JOB_NAME: model_training_job
+        UNIT_TEST_JOB_NAME: unit_test_job
       secrets:
               TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
@@ -46,6 +47,7 @@ jobs:
         FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
         RUNNER: dev-runner
         JOB_NAME: model_training_job
+        UNIT_TEST_JOB_NAME: unit_test_job
       secrets:
               TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}

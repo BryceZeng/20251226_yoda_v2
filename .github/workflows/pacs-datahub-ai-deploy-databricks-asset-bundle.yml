@@ -22,6 +22,10 @@ on:
         type: boolean
         required: false
         default: false
+      UNIT_TEST_JOB_NAME:
+        type: string
+        required: false
+        default: unit_test_job
     secrets:
        HOST:
         required: true
@@ -97,6 +101,7 @@ jobs:
     ### end of downloading template
 
       - name: Setting up the deployment space for unit testing
+        if: inputs.ENVIRONMENT == 'dev'
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
         run: |
@@ -114,10 +119,12 @@ jobs:
             echo '----------End Of Display the final template file-------------------'
 
       - name: switch directory
+        if: inputs.ENVIRONMENT == 'dev'
         run: |
           cd ADB/NOTEBOOKS 
           ls -lrt 
       - name: validate Databricks
+        if: inputs.ENVIRONMENT == 'dev'
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
@@ -125,6 +132,7 @@ jobs:
           cd ADB/NOTEBOOKS 
           databricks bundle validate -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --output json
       - name: summarize Databricks deployment
+        if: inputs.ENVIRONMENT == 'dev'
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
@@ -132,6 +140,7 @@ jobs:
           cd ADB/NOTEBOOKS 
           databricks bundle summary -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}"           
       - name: deploy Databricks
+        if: inputs.ENVIRONMENT == 'dev'
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
@@ -143,12 +152,13 @@ jobs:
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+          UNIT_TEST_JOB_NAME: ${{ inputs.UNIT_TEST_JOB_NAME }}
         run: |
           cd ADB/NOTEBOOKS 
           echo '=========================================='
           echo 'Running Unit Tests Before Training Job'
           echo '=========================================='
-          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} unit_test_job
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${UNIT_TEST_JOB_NAME}
           echo '=========================================='
           echo '✅ Unit Tests Passed! Proceeding with Training'
           echo '=========================================='
@@ -201,8 +211,7 @@ jobs:
           cd ADB/NOTEBOOKS
           databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock  
 
-      - name: Run Training Job (Dev Environment)
-        if: inputs.ENVIRONMENT == 'dev'
+      - name: Run Training/Promote Job depend on deploy as code or deploy as model approach
         env: 
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
@@ -210,13 +219,6 @@ jobs:
         run: |
           cd ADB/NOTEBOOKS 
           databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${JOB_NAME}
-          
-      - name: Run Promote Model Job (Non-Dev Environment)
-        if: inputs.ENVIRONMENT != 'dev' && inputs.DEPLOY_AS_MODEL == true
-        env: 
-          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
-        run: |
-          cd ADB/NOTEBOOKS 
-          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${JOB_NAME}
+      
+
           

@@ -2,3 +2,4 @@
 .vscode
 .venv
 .databricks
+.DS_Store
