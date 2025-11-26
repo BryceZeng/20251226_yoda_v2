@@ -7,13 +7,13 @@
 
 # DBTITLE 1,Importing Python Libraries and Dependencies
 import os
-import helper as pp
 
 from databricks.feature_engineering import FeatureLookup
 from databricks.feature_engineering import FeatureEngineeringClient
 
 import mlflow
 from mlflow.tracking import MlflowClient
+import helper as pp
 
 import lightgbm as lgb
 from sklearn.model_selection import train_test_split
@@ -25,15 +25,21 @@ import numpy as np
 
 # DBTITLE 1,Notebook environment configuration variables
 env = "dev"
-config = pp.load_config(os.getenv("ENVIRONMENT", env))
-print(f"Config loaded: {config}")
-schema = config.get("SCHEMA")
-catalog = config.get("CATALOG")
-input_table_path = config.get("TRAINING_DATA_PATH")
-model_name = config.get("MODEL_NAME")
-experiment_name = config.get("EXPERIMENT_NAME")
-pickup_features_table = config.get("PICKUP_FEATURES_TABLE")
-dropoff_features_table = config.get("DROP_FEATURES_TABLE")
+# config = pp.load_config(os.getenv("ENVIRONMENT", env))
+# print(f"Config loaded: {config}")
+schema = dbutils.widgets.get("SCHEMA")
+env = dbutils.widgets.get("ENV")
+catalog = dbutils.widgets.get("CATALOG")
+input_table_path = dbutils.widgets.get("TRAINING_DATA_PATH")
+model_name = dbutils.widgets.get("MODEL_NAME")
+experiment_name = dbutils.widgets.get("EXPERIMENT_NAME")
+pickup_features_table = dbutils.widgets.get("PICKUP_FEATURES_TABLE")
+dropoff_features_table = dbutils.widgets.get("DROP_FEATURES_TABLE")
+
+# COMMAND ----------
+
+if env == "prod":
+  dbutils.notebook.exit(0)
 
 # COMMAND ----------
 

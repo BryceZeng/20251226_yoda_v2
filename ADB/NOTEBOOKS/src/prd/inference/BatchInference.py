@@ -1,6 +1,5 @@
 # Databricks notebook source
 import os
-import helper as pp
 
 from databricks.feature_engineering import FeatureLookup
 from databricks.feature_engineering import FeatureEngineeringClient
@@ -17,12 +16,10 @@ from datetime import datetime
 
 # COMMAND ----------
 
-env ="dev"
-config = pp.load_config(os.getenv("ENVIRONMENT", "dev"))
-print(f"Config loaded: {config}")
-input_table_name = config.get("INFERENCE_INPUT_TABLE")
-model_name = config.get("MODEL_NAME")
-output_table_name = config.get("OUTPUT_PREDICTION_TABLE")
+input_table_name = dbutils.widgets.get("INFERENCE_INPUT_TABLE")
+env = dbutils.widgets.get("ENV")
+model_name = dbutils.widgets.get("MODEL_NAME")
+output_table_name = dbutils.widgets.get("OUTPUT_PREDICTION_TABLE")
 alias = "champion"
 model_uri = f"models:/{model_name}@{alias}"
 

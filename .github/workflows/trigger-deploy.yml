@@ -4,18 +4,20 @@ on:
     branches:
       - main
       - develop
+      - feature/ps
 
 
 jobs:
     ## move the secrets to org level , remove from repo level
     call-main:
       if: github.ref == 'refs/heads/main'
-      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml@main
+      uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: prod
-        PROJECT_NAME: pacs-743-model-deployment-template
-        FOLDER_NAME: /Workspace/Shared/model-deployment-template
-        RUNNER: prod-runner
+        PROJECT_NAME: pacs-743-model-deployment-template_prod
+        FOLDER_NAME: /Workspace/Shared/model-deployment-template_prod
+        RUNNER: dev-runner
+        JOB_NAME: promote_model_job
       secrets:
               TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
@@ -23,25 +25,29 @@ jobs:
 
     call-develop:
       if: github.ref == 'refs/heads/develop'
-      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml@main
+      uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: dev
-        PROJECT_NAME: p${var.project_name}
-        FOLDER_NAME: /Workspace/${var.project_name}
-        RUNNER: prod-runner
+        PROJECT_NAME: pacs-743-model-deployment-template
+        FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
+        RUNNER: dev-runner
+        JOB_NAME: model_training_job
+        UNIT_TEST_JOB_NAME: unit_test_job
       secrets:
               TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
               GIT_TOKEN : ${{secrets.GIT_TOKEN}}
     call-feature:
-      if: github.ref == 'refs/heads/feature/gitops_setup'
+      if: github.ref == 'refs/heads/feature/ps'
       uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: dev
-        PROJECT_NAME: ${var.project_name}
-        FOLDER_NAME: /Workspace/${var.project_name}
-        RUNNER: prod-runner
+        PROJECT_NAME: pacs-743-model-deployment-template
+        FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
+        RUNNER: dev-runner
+        JOB_NAME: model_training_job
+        UNIT_TEST_JOB_NAME: unit_test_job
       secrets:
-              TOKEN: ${{ secrets.PERSONAL_APE_ACCESS_TOKEN }}
-              HOST : https://adb-6397263301685530.10.azuredatabricks.net
-              GIT_TOKEN : ${{secrets.GIT_TOKEN}}  
+              TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
+              HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
+              GIT_TOKEN : ${{secrets.GIT_TOKEN}}

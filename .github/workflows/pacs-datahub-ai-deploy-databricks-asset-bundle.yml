@@ -1,4 +1,4 @@
-name: Common Template For Datahub Deployment
+name: Common Template For Datahub Deployments
 
 on:
   workflow_call:
@@ -15,6 +15,13 @@ on:
       RUNNER:
         type: string
         required: true
+      JOB_NAME:
+        type: string
+        required: true
+      UNIT_TEST_JOB_NAME:
+        type: string
+        required: false
+        default: unit_test_job
     secrets:
        HOST:
         required: true
@@ -46,7 +53,7 @@ jobs:
         run: echo "Running on ${{ runner.os }}"
 
 
-    # runs-on: pru-pacs-all-prod-linux-runner-01 #pru-pacs-all-nprd-linux-runner-01  # udp-win-nprd # Specify the label of your existing runner
+    # runs-on: pru-pacs-all-prod-linux-runner-01 #pru-pacs-all-nprd-linux-runner-01  # udp-win-nprd # Specify the label of your existing runners
 
     # steps:
       - name: Validate the parameters
@@ -89,6 +96,74 @@ jobs:
           cat ./databricks.yml
     ### end of downloading template
 
+      - name: Setting up the deployment space for unit testing
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+        run: |
+            echo '----------Listing the template file-------------------'
+            ls -lrt   
+            echo '----------End Of Listing the template file-------------------'
+            cat ./databricks.yml
+            sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}/" databricks.yml
+            sed -i "s/Workflows\/commons.*/Workflows\/${DEPLOYMENT_ENVIRONMENT}\-commons\/\*\.yml/" databricks.yml
+            sed -i "s|Workflows/workflow-yaml.*|Workflows/test/*yml|" databricks.yml
+            cat   databricks.yml
+            cp -f ./databricks.yml ./ADB/NOTEBOOKS/.
+            echo '----------Display the final template file-------------------'
+            cat ./ADB/NOTEBOOKS/databricks.yml
+            echo '----------End Of Display the final template file-------------------'
+
+      - name: switch directory
+        if: inputs.ENVIRONMENT == 'dev'
+        run: |
+          cd ADB/NOTEBOOKS 
+          ls -lrt 
+      - name: validate Databricks
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS 
+          databricks bundle validate -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --output json
+      - name: summarize Databricks deployment
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS 
+          databricks bundle summary -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}"           
+      - name: deploy Databricks
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS
+          databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock
+      - name: Run Unit Tests (Dev Environment - Must Pass Before Training)
+        if: inputs.ENVIRONMENT == 'dev'
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+          UNIT_TEST_JOB_NAME: ${{ inputs.UNIT_TEST_JOB_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS 
+          echo '=========================================='
+          echo 'Running Unit Tests Before Training Job'
+          echo '=========================================='
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${UNIT_TEST_JOB_NAME}
+          echo '=========================================='
+          echo '✅ Unit Tests Passed! Proceeding with Training'
+          echo '=========================================='
+
+      - name: listing the databriks template file
+        run: |
+          ls -lrt shared/
+          cp -f shared/actions/pacs/datahub-ai/databricks.yml ./databricks.yml
+          cat ./databricks.yml
 
       - name: Setting up the deployment space
         env: 
@@ -105,7 +180,7 @@ jobs:
             echo '----------Display the final template file-------------------'
             cat ./ADB/NOTEBOOKS/databricks.yml
             echo '----------End Of Display the final template file-------------------'
-
+        
       - name: switch directory
         run: |
           cd ADB/NOTEBOOKS 
@@ -129,6 +204,17 @@ jobs:
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
+          cd ADB/NOTEBOOKS
+          databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock  
+
+      - name: Run Training/Promote Job depend on deploy as code or deploy as model approach
+        env: 
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+          JOB_NAME: ${{ inputs.JOB_NAME }}
+        run: |
           cd ADB/NOTEBOOKS 
-          databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock
+          databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${JOB_NAME}
+      
+
           

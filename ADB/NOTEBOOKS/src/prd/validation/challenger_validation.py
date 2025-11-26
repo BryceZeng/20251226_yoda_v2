@@ -9,22 +9,25 @@ import os
 from databricks.feature_engineering import FeatureLookup
 from databricks.feature_engineering import FeatureEngineeringClient
 
-import helper as pp
-
 import mlflow
 from mlflow.tracking.client import MlflowClient
 
 # COMMAND ----------
 
-config = pp.load_config(os.getenv("ENVIRONMENT", "dev"))
-print(f"Config loaded: {config}")
-schema = config.get("SCHEMA")
-catalog = config.get("CATALOG")
-input_table_path = config.get("TRAINING_DATA_PATH")
-model_name = config.get("MODEL_NAME")
-experiment_name = config.get("EXPERIMENT_NAME")
-pickup_features_table = config.get("PICKUP_FEATURES_TABLE")
-dropoff_features_table = config.get("DROP_FEATURES_TABLE")
+
+schema = dbutils.widgets.get("SCHEMA")
+catalog = dbutils.widgets.get("CATALOG")
+env = dbutils.widgets.get("ENV")
+input_table_path = dbutils.widgets.get("TRAINING_DATA_PATH")
+model_name = dbutils.widgets.get("MODEL_NAME")
+experiment_name = dbutils.widgets.get("EXPERIMENT_NAME")
+pickup_features_table = dbutils.widgets.get("PICKUP_FEATURES_TABLE")
+dropoff_features_table = dbutils.widgets.get("DROP_FEATURES_TABLE")
+
+# COMMAND ----------
+
+if env == "prod":
+  dbutils.notebook.exit(0)
 
 # COMMAND ----------
 

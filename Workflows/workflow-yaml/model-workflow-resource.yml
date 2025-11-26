@@ -21,24 +21,41 @@ resources:
           <<: *new_cluster
       tasks:
         - task_key: Train
-        # job_cluster_key: write_feature_table_job_cluster
-          existing_cluster_id: ${var.cluster_id}
+          job_cluster_key: model_training_job_cluster
+          # existing_cluster_id: ${var.cluster_id}
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/prd/training/TrainWithFeatureStore.py
             base_parameters:
+              SCHEMA: ${var.SCHEMA}
+              ENV : ${bundle.target}
+              CATALOG: ${var.CATALOG}
+              TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
+              MODEL_NAME: ${var.MODEL_NAME}
+              EXPERIMENT_NAME: ${var.EXPERIMENT_NAME}
+              PICKUP_FEATURES_TABLE: ${var.PICKUP_FEATURES_TABLE}
+              DROP_FEATURES_TABLE: ${var.DROP_FEATURES_TABLE}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ChallengerValidation
-        # job_cluster_key: write_feature_table_job_cluster
-          existing_cluster_id: ${var.cluster_id}
+          job_cluster_key: model_training_job_cluster
+          # existing_cluster_id: ${var.cluster_id}
           depends_on:
             - task_key: Train
-          notebook_task:
+          notebook_task: 
             notebook_path: ../../ADB/NOTEBOOKS/src/prd/validation/challenger_validation.py
             base_parameters:
+              SCHEMA: ${var.SCHEMA}
+              ENV : ${bundle.target}
+              CATALOG: ${var.CATALOG}
+              TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
+              MODEL_NAME: ${var.MODEL_NAME}
+              EXPERIMENT_NAME: ${var.EXPERIMENT_NAME}
+              PICKUP_FEATURES_TABLE: ${var.PICKUP_FEATURES_TABLE}
+              DROP_FEATURES_TABLE: ${var.DROP_FEATURES_TABLE}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
         quartz_cron_expression: "0 0 9 * * ?" # daily at 9am
         timezone_id: UTC
+        pause_status: PAUSED
       <<: *permissions
       # If you want to turn on notifications for this job, please uncomment the below code,
       # and provide a list of emails to the on_failure argument.
