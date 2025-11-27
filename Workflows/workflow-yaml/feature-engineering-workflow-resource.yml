@@ -24,7 +24,7 @@ resources:
           job_cluster_key: write_feature_table_job_cluster
           # existing_cluster_id: ${var.cluster_id}
           notebook_task:
-            notebook_path: ../../ADB/NOTEBOOKS/src/prd/feature_engineering/notebooks/GenerateAndWriteFeatures.py
+            notebook_path: ../../ADB/NOTEBOOKS/src/feature_engineering/notebooks/GenerateAndWriteFeatures.py
             base_parameters:
               # TODO modify these arguments to reflect your setup.
               input_table_path: /Volumes/pru/pac_mlops/test
@@ -41,7 +41,7 @@ resources:
           job_cluster_key: write_feature_table_job_cluster
           # existing_cluster_id: ${var.cluster_id}
           notebook_task:
-            notebook_path: ../../ADB/NOTEBOOKS/src/prd/feature_engineering/notebooks/GenerateAndWriteFeatures.py
+            notebook_path: ../../ADB/NOTEBOOKS/src/feature_engineering/notebooks/GenerateAndWriteFeatures.py
             base_parameters:
               # TODO: modify these arguments to reflect your setup.
               input_table_path: /Volumes/pru/pac_mlops/test

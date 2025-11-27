@@ -21,7 +21,7 @@ resources:
           # existing_cluster_id: ${var.cluster_id}
           <<: *new_cluster
           notebook_task:
-            notebook_path: ../../ADB/NOTEBOOKS/src/prd/promote/promote_model.ipynb
+            notebook_path: ../../ADB/NOTEBOOKS/src/promote/promote_model.ipynb
             base_parameters:
               MODEL_NAME: ${var.MODEL_NAME}
               ENV : ${bundle.target}

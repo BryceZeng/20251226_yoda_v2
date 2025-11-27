@@ -24,7 +24,7 @@ resources:
           job_cluster_key: model_training_job_cluster
           # existing_cluster_id: ${var.cluster_id}
           notebook_task:
-            notebook_path: ../../ADB/NOTEBOOKS/src/prd/training/TrainWithFeatureStore.py
+            notebook_path: ../../ADB/NOTEBOOKS/src/training/TrainWithFeatureStore.py
             base_parameters:
               SCHEMA: ${var.SCHEMA}
               ENV : ${bundle.target}
@@ -41,7 +41,7 @@ resources:
           depends_on:
             - task_key: Train
           notebook_task: 
-            notebook_path: ../../ADB/NOTEBOOKS/src/prd/validation/challenger_validation.py
+            notebook_path: ../../ADB/NOTEBOOKS/src/validation/challenger_validation.py
             base_parameters:
               SCHEMA: ${var.SCHEMA}
               ENV : ${bundle.target}
