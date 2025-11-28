@@ -21,7 +21,7 @@ resources:
           # existing_cluster_id: ${var.cluster_id}
           <<: *new_cluster
           notebook_task:
-            notebook_path: ../../ADB/NOTEBOOKS/src/prd/inference/BatchInference.py
+            notebook_path: ../../ADB/NOTEBOOKS/src/inference/BatchInference.py
             base_parameters:
               MODEL_NAME: ${var.MODEL_NAME}
               ENV : ${bundle.target}

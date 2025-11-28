@@ -2,16 +2,14 @@ name: Caller Workflow
 on:
   push:
     branches:
-      - main
+      - master
       - develop
-      - feature/ps
-
 
 jobs:
     ## move the secrets to org level , remove from repo level
-    call-main:
-      if: github.ref == 'refs/heads/main'
-      uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
+    call-master:
+      if: github.ref == 'refs/heads/master'
+      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
       with:
         ENVIRONMENT: prod
         PROJECT_NAME: pacs-743-model-deployment-template_prod
@@ -25,7 +23,7 @@ jobs:
 
     call-develop:
       if: github.ref == 'refs/heads/develop'
-      uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
+      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
       with:
         ENVIRONMENT: dev
         PROJECT_NAME: pacs-743-model-deployment-template
@@ -38,12 +36,12 @@ jobs:
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
               GIT_TOKEN : ${{secrets.GIT_TOKEN}}
     call-feature:
-      if: github.ref == 'refs/heads/feature/ps'
-      uses: ./.github/workflows/pacs-datahub-ai-deploy-databricks-asset-bundle.yml
+      if: github.ref == 'refs/heads/feature/test_mlops'
+      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
       with:
         ENVIRONMENT: dev
-        PROJECT_NAME: pacs-743-model-deployment-template
-        FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
+        PROJECT_NAME: pacs-743-model-testmlops
+        FOLDER_NAME: /Workspace/model-testmlops
         RUNNER: dev-runner
         JOB_NAME: model_training_job
         UNIT_TEST_JOB_NAME: unit_test_job
