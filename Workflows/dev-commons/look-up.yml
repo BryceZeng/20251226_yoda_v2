@@ -31,7 +31,7 @@ variables:
       default: fare_amount
    cluster_id:
       default: 0917-015226-4kipf3hu
-  FE_JOB_FREQUENCY:
+   FE_JOB_FREQUENCY:
       default: monthly
 
    GIT_URL:
