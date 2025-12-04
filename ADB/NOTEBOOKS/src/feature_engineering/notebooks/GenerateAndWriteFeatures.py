@@ -64,7 +64,6 @@ dbutils.widgets.text(
     "zip",
     label="Primary keys columns for the feature table, comma separated.",
 )
-project_name = dbutils.widgets.get("PROJECT_NAME")
 
 # COMMAND ----------
 
@@ -138,31 +137,6 @@ fe.write_table(
     df=features_df,
     mode="merge",
 )
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Create Ground Truth Table
-
-# COMMAND ----------
-
-from pyspark.sql.functions import lit,col
-import uuid
-
-id_col = dbutils.widgets.get("ID_COL")
-ground_truth_col = dbutils.widgets.get("GROUND_TRUTH_COL")
-ground_truth_table = dbutils.widgets.get("GROUND_TRUTH_TABLE")
-
-uuid = uuid.uuid4().hex
-
-df = raw_data.withColumn("uuid", lit(uuid)) \
-  .withColumn("id",col(id_col).cast("string")) \
-  .withColumnRenamed(ground_truth_col,"ground_truth") \
-  .withColumn("project_name",lit(project_name)) \
-  .select("uuid","id","ground_truth","project_name")
-
-
-df.write.mode("append").saveAsTable(ground_truth_table)
 
 # COMMAND ----------
 
