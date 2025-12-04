@@ -64,9 +64,9 @@ df = predict_df.withColumn("uuid", lit(uuid)) \
   .withColumn("id",col(id_col).cast("string")) \
   .withColumn("model_version",lit(model_version)) \
   .withColumnRenamed(prediction_col,"prediction") \
-  .withColumn("prediction_type",lit(prediction_type))
+  .withColumn("prediction_type",lit(prediction_type)) \
   .withColumne("project_name",lit(project_name)) \
-  .select("uuid","id","model_name","model_version","prediction","project_name","timestamp")
+  .select("uuid","id","model_name","model_version","prediction","prediction_type","project_name","timestamp")
 
 df.write.mode("append").saveAsTable(output_table_name)
 
