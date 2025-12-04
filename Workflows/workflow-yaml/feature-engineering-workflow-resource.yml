@@ -27,12 +27,12 @@ resources:
             notebook_path: ../../ADB/NOTEBOOKS/src/feature_engineering/notebooks/GenerateAndWriteFeatures.py
             base_parameters:
               # TODO modify these arguments to reflect your setup.
-              input_table_path: /Volumes/pru/pac_mlops/test
+              input_table_path: ${var.TRAINING_DATA_PATH}
               # TODO: Empty start/end dates will process the whole range. Update this as needed to process recent data.
               input_start_date: ""
               input_end_date: ""
               timestamp_column: tpep_pickup_datetime
-              output_table_name: pru.pac_mlops.trip_pickup_features
+              output_table_name: ${var.PICKUP_FEATURES_TABLE}
               features_transform_module: pickup_features
               primary_keys: zip
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
@@ -44,12 +44,12 @@ resources:
             notebook_path: ../../ADB/NOTEBOOKS/src/feature_engineering/notebooks/GenerateAndWriteFeatures.py
             base_parameters:
               # TODO: modify these arguments to reflect your setup.
-              input_table_path: /Volumes/pru/pac_mlops/test
+              input_table_path: ${var.TRAINING_DATA_PATH}
               # TODO: Empty start/end dates will process the whole range. Update this as needed to process recent data.
               input_start_date: ""
               input_end_date: ""
               timestamp_column: tpep_dropoff_datetime
-              output_table_name: pru.pac_mlops.trip_dropoff_features
+              output_table_name: ${var.DROP_FEATURES_TABLE}
               features_transform_module: dropoff_features
               primary_keys: zip
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
