@@ -135,4 +135,28 @@ fe.write_table(
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Create Ground Truth Table
+
+# COMMAND ----------
+
+from pyspark.sql.functions import lit,col
+import uuid
+
+id_col = dbutils.widgets.get("ID_COL")
+ground_truth_col = dbutils.widgets.get("GROUND_TRUTH_COL")
+ground_truth_table = dbutils.widgets.get("GROUND_TRUTH_TABLE")
+
+uuid = uuid.uuid4().hex
+
+df = raw_data.withColumn("uuid", lit(uuid)) \
+  .withColumn("id",col(id_col).cast("string")) \
+  .withColumnRenamed(ground_truth_col,"ground_truth") \
+  .select("uuid","id","ground_truth")
+
+
+df.write.mode("append").saveAsTable(ground_truth_table)
+
+# COMMAND ----------
+
 dbutils.notebook.exit(0)

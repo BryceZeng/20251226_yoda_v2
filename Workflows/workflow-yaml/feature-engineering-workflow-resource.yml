@@ -11,6 +11,8 @@ common_permissions: &permissions
   permissions:
     - level: CAN_VIEW
       group_name: users
+    - user_name: sourav.banerjee@prudential.com.sg
+      level: CAN_MANAGE
 
 resources:
   jobs:
@@ -35,6 +37,9 @@ resources:
               output_table_name: ${var.PICKUP_FEATURES_TABLE}
               features_transform_module: pickup_features
               primary_keys: zip
+              ID_COL: ${var.ID_COL}
+              GROUND_TRUTH_COL: ${var.PREDICTION_COL}
+              GROUND_TRUTH_TABLE: ${var.GROUND_TRUTH_TABLE}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: DropoffFeatures
@@ -52,6 +57,9 @@ resources:
               output_table_name: ${var.DROP_FEATURES_TABLE}
               features_transform_module: dropoff_features
               primary_keys: zip
+              ID_COL: ${var.ID_COL}
+              GROUND_TRUTH_COL: ${var.PREDICTION_COL}
+              GROUND_TRUTH_TABLE: ${var.GROUND_TRUTH_TABLE}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:

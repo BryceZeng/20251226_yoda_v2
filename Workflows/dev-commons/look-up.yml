@@ -21,6 +21,8 @@ variables:
       default: pru.pac_mlops.feature_store_inference_input
    OUTPUT_PREDICTION_TABLE:
       default: pru.pac_mlops.predictions
+   GROUND_TRUTH_TABLE:
+      default: pru.pac_mlops.ground_truth
    ID_COL:
       default: pickup_zip
    PREDICTION_COL:
