@@ -29,6 +29,8 @@ resources:
               ENV : ${bundle.target}
               INFERENCE_INPUT_TABLE: ${var.INFERENCE_INPUT_TABLE}
               OUTPUT_PREDICTION_TABLE: ${var.OUTPUT_PREDICTION_TABLE}
+              ID_COL: ${var.ID_COL}
+              PREDICTION_COL: ${var.PREDICTION_COL}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
 
       schedule:
