@@ -23,6 +23,8 @@ variables:
       default: pru.pac_mlops.predictions
    GROUND_TRUTH_TABLE:
       default: pru.pac_mlops.ground_truth
+   PROJECT_NAME:
+      default: customer_churn_lightgbm
    ID_COL:
       default: pickup_zip
    PREDICTION_COL:

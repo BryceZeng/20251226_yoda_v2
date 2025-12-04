@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %pip install -qq databricks-feature-engineering
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 ##################################################################################
 # Generate and Write Features Notebook
 #
