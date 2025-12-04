@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - develop
+      - feature/new_change
 
 jobs:
     ## move the secrets to org level , remove from repo level
@@ -36,7 +37,7 @@ jobs:
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
               GIT_TOKEN : ${{secrets.GIT_TOKEN}}
     call-feature:
-      if: github.ref == 'refs/heads/feature/test_mlops'
+      if: github.ref == 'refs/heads/feature/new_change'
       uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
       with:
         ENVIRONMENT: dev

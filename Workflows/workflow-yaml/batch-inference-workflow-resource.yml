@@ -11,15 +11,17 @@ common_permissions: &permissions
   permissions:
     - level: CAN_VIEW
       group_name: users
+    - user_name: sourav.banerjee@prudential.com.sg
+      level: CAN_MANAGE
 
 resources:
   jobs:
     batch_inference_job:
-      name: ${bundle.target}-pac_mlops-batch-inference-job
+      name: ${bundle.target}-pac_mlops-batch-inference-job_test
       tasks:
         - task_key: batch_inference_job
-          # existing_cluster_id: ${var.cluster_id}
-          <<: *new_cluster
+          existing_cluster_id: ${var.cluster_id}
+          # <<: *new_cluster
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/inference/BatchInference.py
             base_parameters:

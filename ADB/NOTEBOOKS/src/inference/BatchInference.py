@@ -22,6 +22,8 @@ model_name = dbutils.widgets.get("MODEL_NAME")
 output_table_name = dbutils.widgets.get("OUTPUT_PREDICTION_TABLE")
 alias = "champion"
 model_uri = f"models:/{model_name}@{alias}"
+id_col = dbutils.widgets.get("ID_COL")
+prediction_col = dbutils.widgets.get("PREDICTION_COL")
 
 # COMMAND ----------
 
@@ -36,7 +38,27 @@ ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 # DBTITLE 1,Load model and run inference
 from predict import predict_batch
 
-predict_batch(spark, model_uri,input_table_name, output_table_name, model_version, ts)
+predict_df = predict_batch(spark, model_uri,input_table_name, model_version, ts)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Write to Prediction table
+
+# COMMAND ----------
+
+from pyspark.sql.functions import lit,col
+import uuid
+uuid = uuid.uuid4().hex
+df = predict_df.withColumn("uuid", lit(uuid)) \
+  .withColumn("model_name",lit(model_name)) \
+  .withColumn("id",col(id_col).cast("string")) \
+  .withColumn("model_version",lit(model_version)) \
+  .withColumnRenamed(prediction_col,"prediction") \
+  .select("uuid","id","model_name","model_version","prediction","timestamp")
+
+df.write.mode("append").saveAsTable(output_table_name)
+
 
 # COMMAND ----------
 

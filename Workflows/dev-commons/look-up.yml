@@ -21,6 +21,12 @@ variables:
       default: pru.pac_mlops.feature_store_inference_input
    OUTPUT_PREDICTION_TABLE:
       default: pru.pac_mlops.predictions
+   ID_COL:
+      default: pickup_zip
+   PREDICTION_COL:
+      default: fare_amount
+   cluster_id:
+      default: 0917-015226-4kipf3hu
   
 
    GIT_URL:

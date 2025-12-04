@@ -77,12 +77,9 @@ def preprocess_raw_data(raw_df):
 
 
 def predict_batch(
-    spark_session, model_uri, input_table_name, output_table_name, model_version, ts
+    spark_session, model_uri, input_table_name, model_version, ts
 ):
     """
-    Apply the model at the specified URI for batch inference on the table with name input_table_name,
-    writing results to the table with name output_table_name.
-    
     This function automatically handles preprocessing of raw data, so it can accept either:
     1. Raw data with tpep_pickup_datetime and tpep_dropoff_datetime (will be preprocessed)
     2. Already preprocessed data with rounded_pickup_datetime and rounded_dropoff_datetime
@@ -105,8 +102,6 @@ def predict_batch(
     # Automatically preprocess raw data if needed
     # This ensures the data has the rounded timestamp columns required for feature store lookups
     preprocessed_table = preprocess_raw_data(table)
-
-    display(preprocessed_table)
        
     # Initialize Feature Engineering Client
     from databricks.feature_engineering import FeatureEngineeringClient    
@@ -124,11 +119,12 @@ def predict_batch(
         .drop("prediction")
     )
     
-    print(f"Predictions generated. Writing to: {output_table_name}")
     output_df.display()
 
-    # Model predictions are written to the Delta table provided as input.
-    # Delta is the default format in Databricks Runtime 8.0 and above.
-    output_df.write.format("delta").mode("overwrite").option("mergeSchema", "true").saveAsTable(output_table_name)
+    # # Model predictions are written to the Delta table provided as input.
+    # # Delta is the default format in Databricks Runtime 8.0 and above.
+    # output_df.write.format("delta").mode("overwrite").option("mergeSchema", "true").saveAsTable(output_table_name)
     
-    print(f"Successfully wrote predictions to {output_table_name}")
+    # print(f"Successfully wrote predictions to {output_table_name}")
+
+    return output_df
