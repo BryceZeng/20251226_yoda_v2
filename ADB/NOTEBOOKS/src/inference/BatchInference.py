@@ -57,7 +57,7 @@ predict_df = predict_batch(spark, model_uri,input_table_name, model_version, ts)
 from pyspark.sql.functions import lit,col
 import uuid
 uuid = uuid.uuid4().hex
-prediction_type = predict_df.schema(prediction_col).dataType.simpleString()
+prediction_type = predict_df.schema[prediction_col].dataType.simpleString()
 # Create table
 df = predict_df.withColumn("uuid", lit(uuid)) \
   .withColumn("model_name",lit(model_name)) \
