@@ -1,4 +1,10 @@
 # Databricks notebook source
+# MAGIC %pip install -qq databricks-feature-engineering
+# MAGIC %pip install -qq lightgbm
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
 import os
 
 from databricks.feature_engineering import FeatureLookup
