@@ -40,6 +40,7 @@ resources:
               ID_COL: ${var.ID_COL}
               GROUND_TRUTH_COL: ${var.PREDICTION_COL}
               GROUND_TRUTH_TABLE: ${var.GROUND_TRUTH_TABLE}
+              PROJECT_NAME: ${var.PROJECT_NAME}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: DropoffFeatures
@@ -60,6 +61,7 @@ resources:
               ID_COL: ${var.ID_COL}
               GROUND_TRUTH_COL: ${var.PREDICTION_COL}
               GROUND_TRUTH_TABLE: ${var.GROUND_TRUTH_TABLE}
+              PROJECT_NAME: ${var.PROJECT_NAME}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:

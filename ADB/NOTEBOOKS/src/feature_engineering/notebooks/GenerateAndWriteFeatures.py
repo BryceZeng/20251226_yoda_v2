@@ -64,6 +64,7 @@ dbutils.widgets.text(
     "zip",
     label="Primary keys columns for the feature table, comma separated.",
 )
+project_name = dbutils.widgets.get("PROJECT_NAME")
 
 # COMMAND ----------
 
@@ -157,7 +158,8 @@ uuid = uuid.uuid4().hex
 df = raw_data.withColumn("uuid", lit(uuid)) \
   .withColumn("id",col(id_col).cast("string")) \
   .withColumnRenamed(ground_truth_col,"ground_truth") \
-  .select("uuid","id","ground_truth")
+  .withColumn("project_name",lit(project_name)) \
+  .select("uuid","id","ground_truth","project_name")
 
 
 df.write.mode("append").saveAsTable(ground_truth_table)
