@@ -1,7 +1,7 @@
 # =============================================================================
-# Production Environment Variable Configuration
+# User Acceptance Testing (UAT) Environment Variable Configuration
 # =============================================================================
-# This file contains environment-specific variables for the production target.
+# This file contains environment-specific variables for the UAT target.
 # Variables defined here will be used by Databricks workflows and jobs.
 #
 # Variable Structure:
@@ -25,16 +25,16 @@ variables:
       default: pac_mlops
 
    CATALOG:
-      description: "Unity Catalog name for data and model storage (production)"
-      default: pru_prod
+      description: "Unity Catalog name for data and model storage (UAT)"
+      default: pru_uat
 
    # =============================================================================
    # Data Path Configuration
    # =============================================================================
 
    TRAINING_DATA_PATH:
-      description: "Path to training data in Unity Catalog volumes (production)"
-      default: /Volumes/pru_prod/pac_mlops/test
+      description: "Path to training data in Unity Catalog volumes (UAT)"
+      default: /Volumes/pru_uat/pac_mlops/test
 
    # =============================================================================
    # Model Configuration
@@ -45,40 +45,40 @@ variables:
       default: pru.pac_mlops.pac_mlops-model
 
    DEST_MODEL_NAME:
-      description: "Destination model name for promotion workflow (production)"
-      default: pru_prod.pac_mlops.pac_mlops-model
+      description: "Destination model name for promotion workflow (UAT)"
+      default: pru_uat.pac_mlops.pac_mlops-model
 
    EXPERIMENT_NAME:
-      description: "MLflow experiment name for model tracking (production)"
-      default: /prod-pac_mlops-experiment
+      description: "MLflow experiment name for model tracking (UAT)"
+      default: /uat-pac_mlops-experiment
 
    # =============================================================================
    # Feature Store Configuration
    # =============================================================================
 
    PICKUP_FEATURES_TABLE:
-      description: "Feature store table for pickup location features (production)"
-      default: pru_prod.pac_mlops.trip_pickup_features
+      description: "Feature store table for pickup location features (UAT)"
+      default: pru_uat.pac_mlops.trip_pickup_features
 
    DROP_FEATURES_TABLE:
-      description: "Feature store table for dropoff location features (production)"
-      default: pru_prod.pac_mlops.trip_dropoff_features
+      description: "Feature store table for dropoff location features (UAT)"
+      default: pru_uat.pac_mlops.trip_dropoff_features
 
    # =============================================================================
    # Inference Configuration
    # =============================================================================
 
    INFERENCE_INPUT_TABLE:
-      description: "Input table for batch inference pipeline (production)"
-      default: pru_prod.pac_mlops.feature_store_inference_input
+      description: "Input table for batch inference pipeline (UAT)"
+      default: pru_uat.pac_mlops.feature_store_inference_input
 
    OUTPUT_PREDICTION_TABLE:
-      description: "Output table for prediction results (production)"
-      default: pru_prod.pac_mlops.predictions
+      description: "Output table for prediction results (UAT)"
+      default: pru_uat.pac_mlops.predictions
 
    GROUND_TRUTH_TABLE:
-      description: "Ground truth table for model validation (production)"
-      default: pru_prod.pac_mlops.ground_truth
+      description: "Ground truth table for model validation (UAT)"
+      default: pru_uat.pac_mlops.ground_truth
 
    # =============================================================================
    # Model Training Parameters
@@ -101,28 +101,36 @@ variables:
       default: fare_amount
 
    # =============================================================================
+   # Compute Configuration
+   # =============================================================================
+
+   cluster_id:
+      description: "Databricks cluster ID for job execution (UAT)"
+      default: 0917-015226-4kipf3hu
+
+   # =============================================================================
    # Scheduling Configuration
    # =============================================================================
 
    FE_JOB_FREQUENCY:
       description: "Feature engineering job execution frequency"
-      default: monthly
+      default: weekly
 
    JOB_FREQUENCY:
       description: "General job execution frequency (alias for FE_JOB_FREQUENCY)"
-      default: monthly
+      default: weekly
 
    # =============================================================================
    # Git Integration Configuration
    # =============================================================================
 
    GIT_URL:
-      description: "Git repository URL for source code tracking (production)"
-      default: "https://github.com/pru_prod-pacs/pacs-743-ai_engineering_feature_engineering.git"
+      description: "Git repository URL for source code tracking (UAT)"
+      default: "https://github.com/pru-pacs/pacs-743-mlops_template.git"
 
    GIT_BRANCH:
-      description: "Git branch for production environment"
-      default: "main"
+      description: "Git branch for UAT environment"
+      default: "release/uat"
 
    # =============================================================================
    # Environment Configuration
@@ -130,74 +138,58 @@ variables:
 
    ENVIRONMENT:
       description: "Current deployment environment identifier"
-      default: "prod"
+      default: "uat"
 
    ENV:
       description: "Environment variable (alias for ENVIRONMENT)"
-      default: "prod"
+      default: "uat"
 
    # =============================================================================
-   # Databricks Workspace Resources (Production)
+   # Databricks Workspace Resources (UAT)
    # =============================================================================
 
    WAREHOUSE_ID:
-      description: "Resolve warehouse ID from warehouse name (production)"
+      description: "Resolve warehouse ID from warehouse name (UAT)"
       lookup:
-        warehouse: "AI-Compute"
-
-   cluster_id:
-      description: "Resolve cluster ID from cluster name (production)"
-      lookup:
-        cluster: "Unity Catalog"
+        warehouse: "Test-Compute"
 
    # =============================================================================
-   # Standard Workflow Tags (Production)
+   # Standard Workflow Tags (UAT)
    # =============================================================================
 
    WORKFLOW_STANDARD_TAGS:
-      description: "Standard tags used for Feature Store workflow (production)"
+      description: "Standard tags used for Feature Store workflow (UAT)"
       type: complex
       default:
         department: AI
         environment: ${var.ENVIRONMENT}
         last_update: n/a
         project: ${var.PROJECT_NAME}
-        scope: PRODUCTION
+        scope: UAT_TESTING
 
    # =============================================================================
-   # Advanced Configuration (Available for Production Use)
+   # Advanced Configuration (Available for UAT Use)
    # =============================================================================
-   # These configurations are ready for production use when needed
+   # These configurations are ready for UAT testing when needed
 
    # NOTIFICATION_CONFIG:
-   #   description: "Email notification configuration for job failures (production)"
+   #   description: "Email notification configuration for job failures (UAT)"
    #   type: complex
    #   default:
    #     on_failure:
-   #       - "ml-prod-team@company.com"
-   #       - "devops-prod-team@company.com"
-   #       - "data-platform@company.com"
+   #       - "ml-uat-team@company.com"
+   #       - "qa-team@company.com"
 
    # CLUSTER_CONFIG:
-   #   description: "Production cluster configuration with autoscaling"
+   #   description: "UAT cluster configuration for testing"
    #   type: complex
    #   default:
    #     spark_version: "15.3.x-cpu-ml-scala2.12"
-   #     node_type_id: "Standard_D4ds_v5"
-   #     driver_node_type_id: "Standard_D4ds_v5"
-   #     data_security_mode: "USER_ISOLATION"
-   #     runtime_engine: "STANDARD"
-   #     autoscale:
-   #       min_workers: 2
-   #       max_workers: 8
+   #     node_type_id: "Standard_DS3_v2"
+   #     data_security_mode: "SINGLE_USER"
+   #     num_workers: 2
    #     custom_tags:
-   #       Division: AI
-   #       Billing: FeatureStore
-   #       Project: ${var.PROJECT_NAME}
-   #       Environment: ${var.ENVIRONMENT}
-   #     spark_conf:
-   #       spark.driver.extraJavaOptions: "-XX:-UseParallelGC -XX:+UseG1GC"
-   #       spark.databricks.delta.preview.enabled: "true"
-   #       spark.network.timeout: "720"
-   #       spark.sql.broadcastTimeout: "1200"
-   #       spark.executor.heartbeat: "60"
+   #       environment: ${var.ENVIRONMENT}
+   #       project: ${var.PROJECT_NAME}
+   #       purpose: "user-acceptance-testing"
+   #       clusterSource: "mlops-stacks_0.4"

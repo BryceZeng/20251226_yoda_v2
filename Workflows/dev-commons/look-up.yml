@@ -1,68 +1,190 @@
+# =============================================================================
+# Development Environment Variable Configuration
+# =============================================================================
+# This file contains environment-specific variables for the development target.
+# Variables defined here will be used by Databricks workflows and jobs.
+#
+# Variable Structure:
+# - default: Default value if not overridden
+# - description: Human-readable description of the variable's purpose
+# - lookup: Dynamic resolution from Databricks workspace (warehouse, cluster, etc.)
+# - type: Variable type (simple, complex, etc.)
+# =============================================================================
+
 variables:
+   # =============================================================================
+   # Core Configuration Parameters
+   # =============================================================================
+
    TASK_KEY:
+      description: "Default task key identifier for workflow tasks"
       default: DEFAULT
+
    SCHEMA:
+      description: "Database schema name for feature store and model artifacts"
       default: pac_mlops
+
    CATALOG:
+      description: "Unity Catalog name for data and model storage"
       default: pru
+
+   # =============================================================================
+   # Data Path Configuration
+   # =============================================================================
+
    TRAINING_DATA_PATH:
+      description: "Path to training data in Unity Catalog volumes"
       default: /Volumes/pru/pac_mlops/test
+
+   # =============================================================================
+   # Model Configuration
+   # =============================================================================
+
    MODEL_NAME:
+      description: "Source model name in MLflow model registry"
       default: pru.pac_mlops.pac_mlops-model
+
    DEST_MODEL_NAME:
+      description: "Destination model name for promotion workflow"
       default: pru_prod.pac_mlops.pac_mlops-model
-   PICKUP_FEATURES_TABLE:
-      default: pru.pac_mlops.trip_pickup_features
-   DROP_FEATURES_TABLE:
-      default: pru.pac_mlops.trip_dropoff_features
+
    EXPERIMENT_NAME:
+      description: "MLflow experiment name for model tracking"
       default: /dev-pac_mlops-experiment
+
+   # =============================================================================
+   # Feature Store Configuration
+   # =============================================================================
+
+   PICKUP_FEATURES_TABLE:
+      description: "Feature store table for pickup location features"
+      default: pru.pac_mlops.trip_pickup_features
+
+   DROP_FEATURES_TABLE:
+      description: "Feature store table for dropoff location features"
+      default: pru.pac_mlops.trip_dropoff_features
+
+   # =============================================================================
+   # Inference Configuration
+   # =============================================================================
+
    INFERENCE_INPUT_TABLE:
+      description: "Input table for batch inference pipeline"
       default: pru.pac_mlops.feature_store_inference_input
+
    OUTPUT_PREDICTION_TABLE:
+      description: "Output table for prediction results"
       default: pru.pac_mlops.predictions
+
    GROUND_TRUTH_TABLE:
+      description: "Ground truth table for model validation"
       default: pru.pac_mlops.ground_truth
+
+   # =============================================================================
+   # Model Training Parameters
+   # =============================================================================
+
    PROJECT_NAME:
+      description: "Project identifier for tracking and organization"
       default: customer_churn_lightgbm
+
    ID_COL:
+      description: "Primary key column name for predictions"
       default: pickup_zip
+
    PREDICTION_COL:
+      description: "Target column name for model predictions"
       default: fare_amount
+
+   GROUND_TRUTH_COL:
+      description: "Ground truth column name for validation (same as PREDICTION_COL)"
+      default: fare_amount
+
+   # =============================================================================
+   # Compute Configuration
+   # =============================================================================
+
    cluster_id:
+      description: "Databricks cluster ID for job execution"
       default: 0917-015226-4kipf3hu
+
+   # =============================================================================
+   # Scheduling Configuration
+   # =============================================================================
+
    FE_JOB_FREQUENCY:
+      description: "Feature engineering job execution frequency"
       default: monthly
 
+   JOB_FREQUENCY:
+      description: "General job execution frequency (alias for FE_JOB_FREQUENCY)"
+      default: monthly
+
+   # =============================================================================
+   # Git Integration Configuration
+   # =============================================================================
+
    GIT_URL:
-      description: "Git url"
+      description: "Git repository URL for source code tracking"
       default: "https://github.com/pru-pacs/pacs-743-mlops_template.git"
 
    GIT_BRANCH:
-      description: "Git branch"
+      description: "Git branch for development environment"
       default: "feature/gitops_setup"
 
+   # =============================================================================
+   # Environment Configuration
+   # =============================================================================
+
    ENVIRONMENT:
-      description: "Environment"
+      description: "Current deployment environment identifier"
       default: "dev"
-   
 
+   ENV:
+      description: "Environment variable (alias for ENVIRONMENT)"
+      default: "dev"
 
-    # WAREHOUSE_ID:
-    #   description: "Resolve warehouse ID from warehouse name"
-    #   lookup:
-    #     warehouse: "BI-Compute"
+   # =============================================================================
+   # Advanced Configuration (Commented for Future Use)
+   # =============================================================================
+   # Uncomment and configure these variables as needed for your environment
+   # =============================================================================
+   # Advanced Configuration (Commented for Future Use)
+   # =============================================================================
+   # Uncomment and configure these variables as needed for your environment
 
-    # WORKFLOW_STANDARD_TAGS:
-    #   description: Standard tags used for Feature Store workflow
-    #   type: complex
-    #   default:
-    #     department: AI
-    #     environment: ${var.ENVIRONMENT}
-    #     last_update: n/a
-    #     project: DEFAULT
-    #     scope: DEFAULT
-    # cluster_id:
-    #   description: "Resolve cluster ID from cluster name"
-    #   lookup:
-    #     cluster: "AIE_PROD_APC_GENAI"
+   # WAREHOUSE_ID:
+   #   description: "Resolve warehouse ID from warehouse name"
+   #   lookup:
+   #     warehouse: "BI-Compute"
+
+   # WORKFLOW_STANDARD_TAGS:
+   #   description: "Standard tags used for Feature Store workflow"
+   #   type: complex
+   #   default:
+   #     department: AI
+   #     environment: ${var.ENVIRONMENT}
+   #     last_update: n/a
+   #     project: ${var.PROJECT_NAME}
+   #     scope: DEFAULT
+
+   # CLUSTER_CONFIG:
+   #   description: "Dynamic cluster configuration based on environment"
+   #   type: complex
+   #   default:
+   #     spark_version: "15.3.x-cpu-ml-scala2.12"
+   #     node_type_id: "Standard_DS3_v2"
+   #     data_security_mode: "SINGLE_USER"
+   #     num_workers: 3
+   #     custom_tags:
+   #       environment: ${var.ENVIRONMENT}
+   #       project: ${var.PROJECT_NAME}
+   #       clusterSource: "mlops-stacks_0.4"
+
+   # NOTIFICATION_CONFIG:
+   #   description: "Email notification configuration for job failures"
+   #   type: complex
+   #   default:
+   #     on_failure:
+   #       - "ml-team@company.com"
+   #       - "devops-team@company.com"

@@ -11,41 +11,48 @@ include:
   - ./../../Workflows/workflow-yaml/*.yaml
   - ./../../Workflows/workflow-yaml/*.yml
   - ./../../Workflows/commons/*.yml
+  - ./../../Workflows/${bundle.target}-commons/*.yml
 
 targets:
   dev:
     mode: production
     default: false
-
+    # Include environment-specific variables
+    variables:
+      environment: dev
     workspace:
       root_path: ${var.folder_name}
-      file_path: ${var.folder_name}   
-    permissions:  
+      file_path: ${var.folder_name}
+    permissions:
       - user_name: ${workspace.current_user.userName}
-        level: CAN_MANAGE      
+        level: CAN_MANAGE
     # run_as:
     #   user_name: ${workspace.current_user.userName}
   uat:
     mode: production
     default: false
-
+    # Include environment-specific variables
+    variables:
+      environment: uat
     workspace:
       root_path: ${var.folder_name}
-      file_path: ${var.folder_name}   
-    permissions:  
+      file_path: ${var.folder_name}
+    permissions:
       - user_name: ${workspace.current_user.userName}
-        level: CAN_MANAGE      
+        level: CAN_MANAGE
     # run_as:
-    #   user_name: ${workspace.current_user.userName}              
+    #   user_name: ${workspace.current_user.userName}
   prod:
     mode: production
     default: false
-
+    # Include environment-specific variables
+    variables:
+      environment: prod
     workspace:
       root_path: ${var.folder_name}
-      file_path: ${var.folder_name}   
-    permissions:  
+      file_path: ${var.folder_name}
+    permissions:
       - user_name: ${workspace.current_user.userName}
-        level: CAN_MANAGE      
+        level: CAN_MANAGE
     # run_as:
-    #   user_name: ${workspace.current_user.userName}   
+    #   user_name: ${workspace.current_user.userName}

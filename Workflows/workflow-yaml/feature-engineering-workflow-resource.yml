@@ -67,11 +67,10 @@ resources:
             base_parameters:
               input_table_path: ${var.TRAINING_DATA_PATH}
               ID_COL: ${var.ID_COL}
-              GROUND_TRUTH_COL: ${var.PREDICTION_COL}
+              GROUND_TRUTH_COL: ${var.GROUND_TRUTH_COL}
               GROUND_TRUTH_TABLE: ${var.GROUND_TRUTH_TABLE}
               PROJECT_NAME: ${var.PROJECT_NAME}
-              JOB_FREQUENCY: ${var.FE_JOB_FREQUENCY}
-              PROJECT_NAME: ${var.PROJECT_NAME}
+              JOB_FREQUENCY: ${var.JOB_FREQUENCY}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
