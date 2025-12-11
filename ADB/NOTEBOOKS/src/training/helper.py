@@ -57,9 +57,24 @@ def load_config(env="dev", config_filename="look-up.yml"):
     try:
         # Primary method: Try Databricks workspace path (when deployed)
         try:
-            workspace_root = '/Workspace' + dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get().split('/src')[0]
-            config_path = f"{workspace_root}/Workflows/{env}-commons/{config_filename}"
-        except:
+            # Check if dbutils is available (Databricks environment)
+            if "dbutils" in globals():
+                workspace_root = (
+                    "/Workspace"
+                    + dbutils.notebook.entry_point.getDbutils()
+                    .notebook()
+                    .getContext()
+                    .notebookPath()
+                    .get()
+                    .split("/src")[0]
+                )
+                config_path = (
+                    f"{workspace_root}/Workflows/{env}-commons/{config_filename}"
+                )
+            else:
+                raise Exception("dbutils not available, using fallback path")
+        except Exception as e:
+            print(f"Workspace path method failed: {e}")
             # Fallback: Use relative path from current notebook location
             # Calculate relative path from training directory to project root
             current_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()
@@ -252,9 +267,9 @@ def get_latest_model_version(model_name, registry_uri="databricks-uc"):
         model_uri = f"models:/{model_name}/{latest_version}"
     """
     latest_version = 1
-    mlflow_client = MlflowClient(registry_uri=registry_uri)
 
     try:
+        mlflow_client = MlflowClient(registry_uri=registry_uri)
         for mv in mlflow_client.search_model_versions(f"name='{model_name}'"):
             version_int = int(mv.version)
             if version_int > latest_version:
@@ -290,11 +305,13 @@ def get_config_value(config_dict, key, widget_name=None, default=None):
     # First try to get from Databricks widget (highest priority)
     if widget_name:
         try:
-            widget_value = dbutils.widgets.get(widget_name)
-            if widget_value and widget_value.strip():
-                return widget_value.strip()
-        except:
-            pass
+            # Check if dbutils is available (Databricks environment)
+            if "dbutils" in globals():
+                widget_value = dbutils.widgets.get(widget_name)
+                if widget_value and widget_value.strip():
+                    return widget_value.strip()
+        except Exception as e:
+            print(f"Warning: Could not get widget value for {widget_name}: {e}")
 
     # Fall back to configuration file
     if key in config_dict and config_dict[key] is not None:

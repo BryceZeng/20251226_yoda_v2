@@ -31,6 +31,17 @@
 import os
 
 # =============================================================================
+# Databricks Utilities (ensure availability)
+# =============================================================================
+try:
+    # dbutils should be available by default in Databricks notebooks
+    dbutils
+except NameError:
+    print(
+        "Warning: dbutils not available. Some functionality may not work in non-Databricks environments."
+    )
+
+# =============================================================================
 # Project-Specific Helper Functions
 # =============================================================================
 import helper as pp
@@ -85,6 +96,20 @@ input_table_path = pp.get_config_value(
 model_name = pp.get_config_value(config, "MODEL_NAME", "MODEL_NAME")
 experiment_name = pp.get_config_value(config, "EXPERIMENT_NAME", "EXPERIMENT_NAME")
 
+# Validate required configuration variables
+if not experiment_name:
+    raise ValueError(
+        "EXPERIMENT_NAME must be configured in the YAML config file or provided as a widget parameter"
+    )
+if not model_name:
+    raise ValueError(
+        "MODEL_NAME must be configured in the YAML config file or provided as a widget parameter"
+    )
+if not input_table_path:
+    raise ValueError(
+        "TRAINING_DATA_PATH must be configured in the YAML config file or provided as a widget parameter"
+    )
+
 # =============================================================================
 # Feature Store Configuration
 # =============================================================================
@@ -137,11 +162,18 @@ if env == "prod":
 # - Change registry URI if not using Unity Catalog
 # - Modify experiment naming convention if needed
 # =============================================================================
-mlflow.set_experiment(experiment_name)
-mlflow.set_registry_uri("databricks-uc")  # Use Unity Catalog for model registry
+try:
+    print(f"Setting up MLflow experiment: {experiment_name}")
+    mlflow.set_experiment(experiment_name)
+    mlflow.set_registry_uri("databricks-uc")  # Use Unity Catalog for model registry
 
-print(f"MLflow experiment set to: {experiment_name}")
-print(f"Using registry URI: databricks-uc")
+    print(f"MLflow experiment set to: {experiment_name}")
+    print(f"Using registry URI: databricks-uc")
+except Exception as e:
+    print(f"Error setting up MLflow experiment: {e}")
+    print(f"Experiment name provided: {experiment_name}")
+    print(f"Type of experiment name: {type(experiment_name)}")
+    raise
 
 # COMMAND ----------
 
