@@ -45,16 +45,19 @@ except NameError:
 # Project-Specific Helper Functions
 # =============================================================================
 import helper as pp
+
 # =============================================================================
 # Machine Learning Libraries
 # =============================================================================
 import lightgbm as lgb
+
 # =============================================================================
 # MLflow for Experiment Tracking and Model Registry
 # =============================================================================
 import mlflow
 import mlflow.lightgbm
 import numpy as np
+
 # =============================================================================
 # Databricks Feature Store
 # =============================================================================
@@ -88,27 +91,32 @@ print(f"Configuration loaded with {len(config)} variables")
 # =============================================================================
 # Core Configuration Variables
 # =============================================================================
-schema = pp.get_config_value(config, "SCHEMA", "SCHEMA")
-catalog = pp.get_config_value(config, "CATALOG", "CATALOG")
+schema = pp.get_config_value(config, "SCHEMA", "SCHEMA", "pac_mlops")
+catalog = pp.get_config_value(config, "CATALOG", "CATALOG", "pru")
 input_table_path = pp.get_config_value(
-    config, "TRAINING_DATA_PATH", "TRAINING_DATA_PATH"
+    config, "TRAINING_DATA_PATH", "TRAINING_DATA_PATH", "/Volumes/pru/pac_mlops/test"
 )
-model_name = pp.get_config_value(config, "MODEL_NAME", "MODEL_NAME")
-experiment_name = pp.get_config_value(config, "EXPERIMENT_NAME", "EXPERIMENT_NAME")
+model_name = pp.get_config_value(
+    config, "MODEL_NAME", "MODEL_NAME", "pru.pac_mlops.pac_mlops-model"
+)
+experiment_name = pp.get_config_value(
+    config, "EXPERIMENT_NAME", "EXPERIMENT_NAME", "/dev-pac_mlops-experiment"
+)
 
-# Validate required configuration variables
+# Validate required configuration variables (with fallbacks)
 if not experiment_name:
-    raise ValueError(
-        "EXPERIMENT_NAME must be configured in the YAML config file or provided as a widget parameter"
+    print(
+        "Warning: EXPERIMENT_NAME not found, using default: /dev-pac_mlops-experiment"
     )
+    experiment_name = "/dev-pac_mlops-experiment"
 if not model_name:
-    raise ValueError(
-        "MODEL_NAME must be configured in the YAML config file or provided as a widget parameter"
-    )
+    print("Warning: MODEL_NAME not found, using default: pru.pac_mlops.pac_mlops-model")
+    model_name = "pru.pac_mlops.pac_mlops-model"
 if not input_table_path:
-    raise ValueError(
-        "TRAINING_DATA_PATH must be configured in the YAML config file or provided as a widget parameter"
+    print(
+        "Warning: TRAINING_DATA_PATH not found, using default: /Volumes/pru/pac_mlops/test"
     )
+    input_table_path = "/Volumes/pru/pac_mlops/test"
 
 # =============================================================================
 # Feature Store Configuration
@@ -116,10 +124,16 @@ if not input_table_path:
 # These variables define which feature tables to use for model training
 # Modify these based on your feature engineering setup
 pickup_features_table = pp.get_config_value(
-    config, "PICKUP_FEATURES_TABLE", "PICKUP_FEATURES_TABLE"
+    config,
+    "PICKUP_FEATURES_TABLE",
+    "PICKUP_FEATURES_TABLE",
+    "pru.pac_mlops.trip_pickup_features",
 )
 dropoff_features_table = pp.get_config_value(
-    config, "DROP_FEATURES_TABLE", "DROP_FEATURES_TABLE"
+    config,
+    "DROP_FEATURES_TABLE",
+    "DROP_FEATURES_TABLE",
+    "pru.pac_mlops.trip_dropoff_features",
 )
 
 # Print configuration for verification
