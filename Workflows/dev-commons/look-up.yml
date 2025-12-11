@@ -53,7 +53,7 @@ variables:
       default: /dev-pac_mlops-experiment
 
    # =============================================================================
-   # Feature Store Configuration
+   # Feature Store Configuration (OPTIONAL)
    # =============================================================================
 
    PICKUP_FEATURES_TABLE:
