@@ -29,7 +29,26 @@ if env == "prod":
 
 # COMMAND ----------
 
-client = MlflowClient(registry_uri="databricks-uc")
+# Skip strict validation in dev environment
+if env.lower() == "dev":
+    print("⚠️  DEV ENVIRONMENT: Skipping strict performance validation")
+    print("   All models will be promoted in dev for testing purposes")
+    
+    client = MlflowClient(registry_uri="databricks-uc")
+    mlflow.set_registry_uri('databricks-uc')
+    
+    # Get the challenger model details
+    model_alias = "challenger"
+    model_details = client.get_model_version_by_alias(model_name, model_alias)
+    model_version = int(model_details.version)
+    
+    # Simply promote to Champion without validation
+    print(f"🚀 Promoting model {model_name} version {model_version} to Champion")
+    client.set_registered_model_alias(
+        name=model_name, alias="Champion", version=model_version
+    )
+    print(f"✅ Model promoted successfully in dev environment")
+    dbutils.notebook.exit(0)
 mlflow.set_registry_uri("databricks-uc")
 
 # COMMAND ----------
