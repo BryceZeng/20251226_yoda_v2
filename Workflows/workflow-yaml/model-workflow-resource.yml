@@ -14,7 +14,7 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    model_training_workflow_job:
+    model_training_job:
       name: ${bundle.target}-pac_mlops-model-training-job
       job_clusters:
         - job_cluster_key: model_training_job_cluster
