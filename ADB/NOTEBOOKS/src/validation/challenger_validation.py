@@ -50,26 +50,40 @@ print(
 
 model_run_id = model_details.run_id
 rmse_score = mlflow.get_run(model_run_id).data.metrics["test_rmse"]
-print(f"Current Model RMSE score: {rmse_score}")
+print(f"Current Challenger Model RMSE score: {rmse_score}")
+print(f"Challenger model version: {model_version}")
 champion_model_exists = False
 
 try:
     # Compare the challenger RMSE score to the existing champion if it exists
+    print("🔍 Checking for existing Champion model...")
     champion_model = client.get_model_version_by_alias(model_name, "Champion")
     champion_version = int(champion_model.version)
-    print(f"Champion model version: {champion_version}")
+    print(f"✅ Found Champion model version: {champion_version}")
     champion_rmse = mlflow.get_run(champion_model.run_id).data.metrics["test_rmse"]
-    print(f"Champion RMSE score: {champion_rmse}. Challenger RMSE score: {rmse_score}.")
+    print(f"📊 Champion RMSE: {champion_rmse} vs Challenger RMSE: {rmse_score}")
     metric_rmse_passed = rmse_score <= champion_rmse
     champion_model_exists = True
-except:
-    print(f"No Champion found. Accept the model as it's the first one.")
+
+    if metric_rmse_passed:
+        print(
+            f"✅ Challenger model BETTER - RMSE improved by {champion_rmse - rmse_score:.6f}"
+        )
+    else:
+        print(
+            f"❌ Challenger model WORSE - RMSE increased by {rmse_score - champion_rmse:.6f}"
+        )
+
+except Exception as e:
+    print(f"⚠️  No Champion found (expected for first model): {e}")
+    print("   Accepting challenger as the first champion model.")
     metric_rmse_passed = True
     champion_model_exists = False
 
-print(
-    f"Model {model_name} version {model_details.version} metric_rmse_passed: {metric_rmse_passed}"
-)
+print(f"🏁 VALIDATION RESULT:")
+print(f"   Model: {model_name} version {model_details.version}")
+print(f"   RMSE Check Passed: {metric_rmse_passed}")
+print(f"   Champion Exists: {champion_model_exists}")
 # Tag that RMSE metric check has passed - ensure string value for consistent comparison
 client.set_model_version_tag(
     name=model_name,
@@ -96,41 +110,56 @@ print(
 print(f"Debug - champion_model_exists: {champion_model_exists}")
 
 if champion_model_exists:
+    print("🏆 CHAMPION MODEL EXISTS - COMPARISON MODE")
     # More robust check for metric_rmse_passed tag
     tag_value = results.tags.get("metric_rmse_passed")
     passed = tag_value == "True" or tag_value == True or tag_value == "true"
 
+    print(f"   Tag value: '{tag_value}' -> Validation passed: {passed}")
+
     if passed:
-        print("register new model as Champion!")
+        print("🚀 PROMOTING challenger to Champion!")
         client.set_registered_model_alias(
             name=model_name, alias="Champion", version=model_version
         )
-        print(f"Model {model_name} version {model_version} registered as Champion")
+        print(f"✅ Model {model_name} version {model_version} registered as Champion")
 
-        print("register Old Model as Challenger!")
+        print("🔄 Moving old Champion to challenger...")
         client.set_registered_model_alias(
             name=model_name, alias="challenger", version=champion_version
         )
-        print(f"Model {model_name} version {champion_version} registered as Challenger")
+        print(
+            f"✅ Model {model_name} version {champion_version} registered as challenger"
+        )
 
     else:
         print(
-            f"Error: Model validation failed. RMSE check did not pass. Tag value: '{results.tags.get('metric_rmse_passed')}'"
+            "❌ VALIDATION FAILED - Challenger model performance is worse than Champion"
         )
-        raise Exception("Model not ready for promotion")
+        print(f"   Challenger RMSE: {rmse_score}")
+        print(f"   Champion RMSE: {champion_rmse}")
+        print(f"   Tag value: '{results.tags.get('metric_rmse_passed')}'")
+        print(
+            "   Recommendation: Check model training parameters or feature engineering"
+        )
+        raise Exception("Model not ready for promotion - performance degraded")
 else:
+    print("🎯 FIRST MODEL - NO CHAMPION EXISTS")
     # More robust check for metric_rmse_passed tag
     tag_value = results.tags.get("metric_rmse_passed")
     passed = tag_value == "True" or tag_value == True or tag_value == "true"
 
+    print(f"   Tag value: '{tag_value}' -> Validation passed: {passed}")
+
     if passed:
-        print("register new model as Champion!")
+        print("🚀 PROMOTING first model to Champion!")
         client.set_registered_model_alias(
             name=model_name, alias="Champion", version=model_version
         )
-        print(f"Model {model_name} version {model_version} registered as Champion")
+        print(f"✅ Model {model_name} version {model_version} registered as Champion")
     else:
-        print(
-            f"Error: Model validation failed. RMSE check did not pass. Tag value: '{results.tags.get('metric_rmse_passed')}'"
-        )
-        raise Exception("Model not ready for promotion")
+        print("❌ UNEXPECTED: First model failed basic validation")
+        print(f"   RMSE Score: {rmse_score}")
+        print(f"   Tag value: '{results.tags.get('metric_rmse_passed')}'")
+        print("   This should not happen for the first model")
+        raise Exception("Model not ready for promotion - unexpected validation failure")
