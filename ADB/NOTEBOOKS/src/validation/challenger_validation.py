@@ -81,6 +81,7 @@ client.set_model_version_tag(
 # COMMAND ----------
 
 import time
+
 # Small delay to ensure tag is persisted
 time.sleep(2)
 
@@ -96,9 +97,9 @@ print(f"Debug - champion_model_exists: {champion_model_exists}")
 
 if champion_model_exists:
     # More robust check for metric_rmse_passed tag
-    tag_value = results.tags.get('metric_rmse_passed')
-    passed = (tag_value == "True" or tag_value == True or tag_value == "true")
-    
+    tag_value = results.tags.get("metric_rmse_passed")
+    passed = tag_value == "True" or tag_value == True or tag_value == "true"
+
     if passed:
         print("register new model as Champion!")
         client.set_registered_model_alias(
@@ -119,9 +120,9 @@ if champion_model_exists:
         raise Exception("Model not ready for promotion")
 else:
     # More robust check for metric_rmse_passed tag
-    tag_value = results.tags.get('metric_rmse_passed')
-    passed = (tag_value == "True" or tag_value == True or tag_value == "true")
-    
+    tag_value = results.tags.get("metric_rmse_passed")
+    passed = tag_value == "True" or tag_value == True or tag_value == "true"
+
     if passed:
         print("register new model as Champion!")
         client.set_registered_model_alias(
