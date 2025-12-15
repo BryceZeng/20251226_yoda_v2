@@ -1,81 +1,186 @@
 # Databricks notebook source
-# MAGIC %pip install -qq databricks-feature-engineering
-# MAGIC %pip install -qq lightgbm
-# MAGIC dbutils.library.restartPython()
+# =============================================================================
+# Batch Inference Pipeline for ML Model Predictions
+# =============================================================================
+# This notebook performs batch inference using the champion model to generate
+# predictions on input data and stores results in a prediction table.
+#
+# Key Features:
+# - Loads champion model from MLflow registry
+# - Processes input data through prediction pipeline
+# - Enriches predictions with metadata for tracking
+# - Saves results to prediction table for downstream consumption
+#
+# Dependencies: predict.py module for core prediction logic
+# =============================================================================
 
-# COMMAND ----------
-
+# DBTITLE 1,Import Required Libraries
+# =============================================================================
+# Core Libraries
+# =============================================================================
 import os
-
-# Simplified imports
-# from databricks.feature_engineering import FeatureLookup  # REMOVED - using direct SQL now
-from databricks.feature_engineering import FeatureEngineeringClient
-
-import mlflow
-from mlflow.tracking import MlflowClient
-
-import lightgbm as lgb
-from sklearn.model_selection import train_test_split
-import mlflow.lightgbm
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import numpy as np
+import uuid
 from datetime import datetime
 
-# COMMAND ----------
+# =============================================================================
+# Machine Learning Libraries
+# =============================================================================
+import lightgbm as lgb
+import mlflow
+import mlflow.lightgbm
+import numpy as np
+# =============================================================================
+# Databricks & MLflow Libraries
+# =============================================================================
+from databricks.feature_engineering import FeatureEngineeringClient
+from mlflow.tracking import MlflowClient
 
-input_table_name = dbutils.widgets.get("INFERENCE_INPUT_TABLE")
-env = dbutils.widgets.get("ENV")
-model_name = dbutils.widgets.get("MODEL_NAME")
-output_table_name = dbutils.widgets.get("OUTPUT_PREDICTION_TABLE")
-alias = "champion"
-model_uri = f"models:/{model_name}@{alias}"
-id_col = dbutils.widgets.get("ID_COL")
-prediction_col = dbutils.widgets.get("PREDICTION_COL")
-project_name = dbutils.widgets.get("PROJECT_NAME")
+# =============================================================================
+# Spark Libraries for Data Processing
+# =============================================================================
+from pyspark.sql.functions import col, lit
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
 
-# COMMAND ----------
+print("📦 All libraries imported successfully")
+# =============================================================================
+# Parameter Configuration
+# =============================================================================
+# Extract parameters passed from workflow YAML configuration
+try:
+    # Input/Output Configuration
+    input_table_name = dbutils.widgets.get("INFERENCE_INPUT_TABLE")
+    output_table_name = dbutils.widgets.get("OUTPUT_PREDICTION_TABLE")
 
-client = MlflowClient(registry_uri="databricks-uc")
-model_version = client.get_model_version_by_alias(model_name, alias).version
+    # Model Configuration
+    env = dbutils.widgets.get("ENV")
+    model_name = dbutils.widgets.get("MODEL_NAME")
+    alias = "champion"  # Always use champion model for inference
+    model_uri = f"models:/{model_name}@{alias}"
 
-# Get datetime
-ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Data Schema Configuration
+    id_col = dbutils.widgets.get("ID_COL")
+    prediction_col = dbutils.widgets.get("PREDICTION_COL")
+    project_name = dbutils.widgets.get("PROJECT_NAME")
 
-# COMMAND ----------
+    print("✅ Parameter extraction successful:")
+    print(f"   Input Table: {input_table_name}")
+    print(f"   Output Table: {output_table_name}")
+    print(f"   Model: {model_uri}")
+    print(f"   Environment: {env}")
 
-# DBTITLE 1,Load model and run inference
-from predict import predict_batch
+except Exception as e:
+    print(f"❌ Error extracting parameters: {str(e)}")
+    dbutils.notebook.exit("Failed to extract required parameters")
 
-predict_df = predict_batch(spark, model_uri,input_table_name, model_version, ts)
+# =============================================================================
+# Model Registry Setup
+# =============================================================================
+try:
+    # Initialize MLflow client with Unity Catalog
+    client = MlflowClient(registry_uri="databricks-uc")
 
-# COMMAND ----------
+    # Get the specific version of the champion model
+    model_version = client.get_model_version_by_alias(model_name, alias).version
 
-# MAGIC %md
-# MAGIC ## Write to Prediction table
+    # Generate timestamp for prediction tracking
+    prediction_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# COMMAND ----------
+    print(f"🎯 Model configuration:")
+    print(f"   Champion Model Version: {model_version}")
+    print(f"   Prediction Timestamp: {prediction_timestamp}")
 
-from pyspark.sql.functions import lit,col
-import uuid
-uuid = uuid.uuid4().hex
-prediction_type = predict_df.schema[prediction_col].dataType.simpleString()
-# Create table
-df = predict_df.withColumn("uuid", lit(uuid)) \
-  .withColumn("model_name",lit(model_name)) \
-  .withColumn("id",col(id_col).cast("string")) \
-  .withColumn("model_version",lit(model_version)) \
-  .withColumnRenamed(prediction_col,"prediction") \
-  .withColumn("prediction_type",lit(prediction_type)) \
-  .withColumn("project_name",lit(project_name)) \
-  .select("uuid","id","model_name","model_version","prediction","prediction_type","project_name","timestamp")
+except Exception as e:
+    error_msg = f"Failed to initialize model configuration: {str(e)}"
+    print(f"❌ {error_msg}")
+    dbutils.notebook.exit(error_msg)
 
-df.write.mode("append").saveAsTable(output_table_name)
+# =============================================================================
+# Core Prediction Pipeline
+# =============================================================================
+try:
+    # Import prediction function from predict module
+    from predict import predict_batch
 
+    print(f"🚀 Starting batch inference on: {input_table_name}")
 
-# COMMAND ----------
+    # Execute prediction pipeline
+    predictions_df = predict_batch(
+        spark_session=spark,
+        model_uri=model_uri,
+        input_table_name=input_table_name,
+        model_version=model_version,
+        ts=prediction_timestamp,
+    )
 
+    print(f"✅ Batch inference completed successfully")
+    print(f"📊 Generated {predictions_df.count()} predictions")
+
+except Exception as e:
+    error_msg = f"Batch inference failed: {str(e)}"
+    print(f"❌ {error_msg}")
+    dbutils.notebook.exit(error_msg)
+
+# =============================================================================
+# Output Data Preparation
+# =============================================================================
+try:
+    print("📝 Enriching predictions with tracking metadata...")
+
+    # Generate unique identifier for this prediction batch
+    batch_uuid = uuid.uuid4().hex
+
+    # Get prediction column data type for metadata
+    prediction_type = predictions_df.schema[prediction_col].dataType.simpleString()
+
+    # Enrich predictions with comprehensive metadata for tracking and auditing
+    enriched_predictions = (
+        predictions_df.withColumn("uuid", lit(batch_uuid))  # Batch identifier
+        .withColumn("model_name", lit(model_name))  # Model name
+        .withColumn("id", col(id_col).cast("string"))  # Record identifier
+        .withColumn("model_version", lit(model_version))  # Model version
+        .withColumnRenamed(
+            prediction_col, "prediction"
+        )  # Standardized prediction column
+        .withColumn("prediction_type", lit(prediction_type))  # Data type metadata
+        .withColumn("project_name", lit(project_name))  # Project identifier
+        .select(
+            "uuid",
+            "id",
+            "model_name",
+            "model_version",
+            "prediction",
+            "prediction_type",
+            "project_name",
+            "timestamp",
+        )
+    )
+
+    print(f"📤 Saving enriched predictions to: {output_table_name}")
+
+    # Write predictions to output table in append mode
+    enriched_predictions.write.mode("append").saveAsTable(output_table_name)
+
+    print("✅ Predictions saved successfully")
+
+except Exception as e:
+    error_msg = f"Failed to save predictions: {str(e)}"
+    print(f"❌ {error_msg}")
+    dbutils.notebook.exit(error_msg)
+
+# =============================================================================
+# Pipeline Completion
+# =============================================================================
+print("=" * 60)
+print("🎉 BATCH INFERENCE COMPLETED SUCCESSFULLY!")
+print("=" * 60)
+print(f"📊 SUMMARY:")
+print(f"   Input Table: {input_table_name}")
+print(f"   Output Table: {output_table_name}")
+print(f"   Model: {model_name} (v{model_version})")
+print(f"   Batch UUID: {batch_uuid}")
+print(f"   Environment: {env}")
+print("=" * 60)
+
+# Return output table name for downstream workflow coordination
 dbutils.notebook.exit(output_table_name)
-
-# COMMAND ----------
-
-

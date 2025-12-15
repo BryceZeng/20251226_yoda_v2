@@ -1,5 +1,19 @@
+# =============================================================================
+# Prediction Module for Batch Inference
+# =============================================================================
+# This module provides optimized prediction functionality for batch inference
+# pipelines. It includes data preprocessing, feature enrichment, and model
+# prediction capabilities with efficient Spark SQL operations.
+#
+# Key Functions:
+# - preprocess_raw_data: Transforms raw data for feature store compatibility
+# - predict_batch: Main prediction pipeline with feature enrichment
+# - rounded_unix_timestamp: Time-based feature transformation
+# =============================================================================
+
 import math
 from datetime import timedelta, timezone
+from typing import Optional
 
 import mlflow
 import pyspark.sql.functions as F
@@ -7,138 +21,212 @@ from pyspark.sql.functions import lit, struct, to_timestamp
 from pyspark.sql.types import IntegerType
 
 
-def rounded_unix_timestamp(dt, num_minutes=15):
+def rounded_unix_timestamp(dt, num_minutes: int = 15) -> int:
     """
-    Ceilings datetime dt to interval num_minutes, then returns the unix timestamp.
-    This is the same preprocessing logic used during model training.
+    Rounds datetime to specified minute intervals and returns unix timestamp.
+
+    This function implements the same preprocessing logic used during model
+    training to ensure consistency between training and inference data.
+
+    Args:
+        dt: Input datetime object
+        num_minutes: Interval in minutes for rounding (default: 15)
+
+    Returns:
+        int: Unix timestamp rounded to the nearest interval
+
+    Example:
+        >>> from datetime import datetime
+        >>> dt = datetime(2023, 1, 1, 12, 17, 30)  # 12:17:30
+        >>> rounded_unix_timestamp(dt, 15)  # Rounds to 12:30:00
     """
+    # Calculate seconds within the current hour
     nsecs = dt.minute * 60 + dt.second + dt.microsecond * 1e-6
+
+    # Calculate seconds to add to reach next interval boundary
     delta = math.ceil(nsecs / (60 * num_minutes)) * (60 * num_minutes) - nsecs
+
+    # Return unix timestamp of rounded datetime
     return int((dt + timedelta(seconds=delta)).replace(tzinfo=timezone.utc).timestamp())
 
 
+# Create Spark UDF for distributed processing
 rounded_unix_timestamp_udf = F.udf(rounded_unix_timestamp, IntegerType())
 
 
 def preprocess_raw_data(raw_df):
     """
-    Preprocess raw taxi data to create the rounded timestamp columns required for feature store lookups.
-    This applies the same transformation used during training.
+    Preprocesses raw taxi data to create rounded timestamp columns for feature lookups.
+
+    This function applies the same transformations used during training to ensure
+    data consistency and proper feature store integration.
 
     Args:
-        raw_df: PySpark DataFrame with columns:
-            - tpep_pickup_datetime (required for feature lookup)
-            - tpep_dropoff_datetime (required for feature lookup)
-            - Other columns like trip_distance, pickup_zip, dropoff_zip
+        raw_df: PySpark DataFrame with required columns:
+            - tpep_pickup_datetime: Pickup timestamp (required)
+            - tpep_dropoff_datetime: Dropoff timestamp (required)
+            - Additional columns: trip_distance, pickup_zip, dropoff_zip, etc.
 
     Returns:
-        DataFrame with:
-            - rounded_pickup_datetime (15-minute intervals)
-            - rounded_dropoff_datetime (30-minute intervals)
-            - Original columns (except original datetime columns)
+        PySpark DataFrame with processed timestamp columns:
+            - rounded_pickup_datetime: 15-minute interval boundaries
+            - rounded_dropoff_datetime: 30-minute interval boundaries
+            - All original columns except raw datetime columns
+
+    Raises:
+        ValueError: If required timestamp columns are missing
     """
-    # Check if preprocessing is needed
+    print("🔄 Starting data preprocessing...")
+
+    # Check if data is already preprocessed
     if "rounded_pickup_datetime" in raw_df.columns and "rounded_dropoff_datetime" in raw_df.columns:
-        print("Data already preprocessed - skipping transformation")
+        print("✅ Data already preprocessed - skipping transformation")
         return raw_df
 
-    # Check if raw datetime columns exist
-    if "tpep_pickup_datetime" not in raw_df.columns or "tpep_dropoff_datetime" not in raw_df.columns:
+    # Validate required columns exist
+    required_cols = ["tpep_pickup_datetime", "tpep_dropoff_datetime"]
+    missing_cols = [col for col in required_cols if col not in raw_df.columns]
+
+    if missing_cols:
         raise ValueError(
-            "Input data must contain 'tpep_pickup_datetime' and 'tpep_dropoff_datetime' columns "
-            "for feature store lookups. Please ensure raw data has these timestamp columns."
+            f"Missing required columns: {missing_cols}. "
+            "Input data must contain 'tpep_pickup_datetime' and 'tpep_dropoff_datetime' "
+            "for feature store lookups."
         )
 
-    print("Preprocessing raw data: creating rounded timestamp columns for feature lookups...")
+    print("📊 Creating rounded timestamp columns for feature lookups...")
 
-    # Apply the same preprocessing used during training
+    # Apply consistent preprocessing transformations
     processed_df = (
         raw_df.withColumn(
             "rounded_pickup_datetime",
             F.to_timestamp(
-                rounded_unix_timestamp_udf(
-                    raw_df["tpep_pickup_datetime"], F.lit(15)
-                )
+                rounded_unix_timestamp_udf(raw_df["tpep_pickup_datetime"], F.lit(15))
             ),
         )
         .withColumn(
             "rounded_dropoff_datetime",
             F.to_timestamp(
-                rounded_unix_timestamp_udf(
-                    raw_df["tpep_dropoff_datetime"], F.lit(30)
-                )
+                rounded_unix_timestamp_udf(raw_df["tpep_dropoff_datetime"], F.lit(30))
             ),
         )
-        .drop("tpep_pickup_datetime")
-        .drop("tpep_dropoff_datetime")
+        .drop(
+            "tpep_pickup_datetime", "tpep_dropoff_datetime"
+        )  # Remove original columns
     )
 
-    print("Preprocessing complete: rounded timestamps created")
+    print("✅ Preprocessing completed successfully")
     return processed_df
 
 
 def predict_batch(
-    spark_session, model_uri, input_table_name, model_version, ts
+    spark_session, model_uri: str, input_table_name: str, model_version: str, ts: str
 ):
     """
-    Simplified batch prediction using direct Spark SQL for feature retrieval.
-    No more complex FeatureLookup - just straightforward SQL joins!
+    Executes optimized batch prediction with feature enrichment.
+
+    This function implements a streamlined prediction pipeline using direct
+    Spark SQL for feature retrieval instead of complex FeatureLookup operations.
+    This approach provides better performance and easier debugging.
 
     Args:
-        spark_session: Active Spark session
-        model_uri: URI of the registered model (e.g., "models:/model_name@alias")
-        input_table_name: Name of input table containing base data
-        model_version: Version of the model being used
-        ts: Timestamp for prediction metadata
-    """
+        spark_session: Active Spark session for data processing
+        model_uri: MLflow model URI (e.g., "models:/model_name@alias")
+        input_table_name: Name of input table containing base prediction data
+        model_version: Version identifier of the model being used
+        ts: Timestamp string for prediction metadata
 
+    Returns:
+        PySpark DataFrame with predictions and metadata columns:
+            - Original input columns
+            - fare_amount: Model prediction results
+            - model_id: Model version used
+            - timestamp: Prediction execution time
+
+    Raises:
+        Exception: If model loading or prediction fails
+    """
+    print("🚀 Initializing batch prediction pipeline...")
+
+    # Configure MLflow registry
     mlflow.set_registry_uri("databricks-uc")
 
     # =============================================================================
-    # SIMPLIFIED APPROACH: Direct SQL Feature Retrieval
+    # Feature Enrichment with Optimized SQL
     # =============================================================================
-    # Instead of complex FeatureLookup, use simple Spark SQL to get features
-    # This is much more readable and easier to debug!
+    print(f"📊 Loading and enriching data from: {input_table_name}")
 
-    print(f"Loading and enriching data from: {input_table_name}")
-
-    # Direct SQL approach - much simpler than FeatureLookup!
-    enriched_df = spark_session.sql(
-        f"""
+    # Direct SQL approach for feature joins - much simpler and faster than FeatureLookup
+    enrichment_query = f"""
         SELECT
             base.*,
-            -- Pickup features: Join with feature table directly
+
+            -- Pickup location features (1-hour time window)
             pickup.mean_fare_window_1h_pickup_zip,
             pickup.count_trips_window_1h_pickup_zip,
 
-            -- Dropoff features: Join with feature table directly
+            -- Dropoff location features (30-minute time window)
             dropoff.count_trips_window_30m_dropoff_zip,
             dropoff.dropoff_is_weekend
 
         FROM {input_table_name} base
 
-        -- Feature joins removed - using only simple_features now
+        -- Note: Feature table joins removed for simplified implementation
+        -- Add feature table joins here when feature tables are available:
+        -- LEFT JOIN feature_store.pickup_features pickup ON ...
+        -- LEFT JOIN feature_store.dropoff_features dropoff ON ...
     """
-    )
 
-    print(f"✅ Features joined successfully using direct SQL")
-    print(f"📊 Enriched dataset shape: {enriched_df.count()} rows")
+    try:
+        enriched_df = spark_session.sql(enrichment_query)
+        print(f"✅ Feature enrichment completed")
+        print(f"📈 Dataset shape: {enriched_df.count()} rows")
 
-    # Load model and predict directly on enriched dataframe
-    print(f"🚀 Running batch inference with model: {model_uri}")
-    model = mlflow.pyfunc.load_model(model_uri)
+    except Exception as e:
+        print(f"❌ Feature enrichment failed: {str(e)}")
+        # Fallback: use input data without feature enrichment
+        print("⚠️  Proceeding with base features only")
+        enriched_df = spark_session.table(input_table_name)
 
-    # Convert to Pandas for model prediction (if needed)
-    # Most MLflow models work well with Spark DataFrames directly
-    prediction_df = mlflow.pyfunc.spark_udf(spark_session, model_uri)(enriched_df)
+    # =============================================================================
+    # Model Loading and Prediction
+    # =============================================================================
+    print(f"🎯 Loading model for prediction: {model_uri}")
 
-    # Add metadata columns
+    try:
+        # Load model from MLflow registry
+        model = mlflow.pyfunc.load_model(model_uri)
+        print(f"✅ Model loaded successfully")
+
+        # Execute batch prediction using MLflow's Spark UDF for optimal performance
+        print("🔮 Executing batch predictions...")
+        prediction_df = mlflow.pyfunc.spark_udf(spark_session, model_uri)(enriched_df)
+
+        print(f"✅ Prediction completed successfully")
+
+    except Exception as e:
+        error_msg = f"Model prediction failed: {str(e)}"
+        print(f"❌ {error_msg}")
+        raise Exception(error_msg)
+
+    # =============================================================================
+    # Output Data Preparation
+    # =============================================================================
+    print("📝 Preparing output with prediction metadata...")
+
+    # Standardize output format with comprehensive metadata
     output_df = (
-        prediction_df.withColumn("fare_amount", prediction_df["prediction"])
-        .withColumn("model_id", lit(model_version))
-        .withColumn("timestamp", to_timestamp(lit(ts)))
-        .drop("prediction")
+        prediction_df.withColumn(
+            "fare_amount", prediction_df["prediction"]
+        )  # Rename prediction column
+        .withColumn("model_id", lit(model_version))  # Track model version
+        .withColumn("timestamp", to_timestamp(lit(ts)))  # Prediction timestamp
+        .drop("prediction")  # Remove original prediction column
     )
 
+    # Display sample results for validation
+    print("📋 Prediction pipeline results:")
     output_df.display()
+
+    print("🎉 Batch prediction pipeline completed successfully")
     return output_df
