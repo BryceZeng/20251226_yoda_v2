@@ -6,10 +6,8 @@
 
 import os
 
-from databricks.feature_engineering import FeatureLookup
-from databricks.feature_engineering import FeatureEngineeringClient
-
 import mlflow
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 from mlflow.tracking.client import MlflowClient
 
 # COMMAND ----------
@@ -21,8 +19,8 @@ env = dbutils.widgets.get("ENV")
 input_table_path = dbutils.widgets.get("TRAINING_DATA_PATH")
 model_name = dbutils.widgets.get("MODEL_NAME")
 experiment_name = dbutils.widgets.get("EXPERIMENT_NAME")
-pickup_features_table = dbutils.widgets.get("PICKUP_FEATURES_TABLE")
-dropoff_features_table = dbutils.widgets.get("DROP_FEATURES_TABLE")
+# pickup_features_table = dbutils.widgets.get("PICKUP_FEATURES_TABLE")
+# dropoff_features_table = dbutils.widgets.get("DROP_FEATURES_TABLE")
 
 # COMMAND ----------
 

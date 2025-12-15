@@ -17,8 +17,10 @@
 - [ ] DEST_MODEL_NAME matches target environment
 
 ### 3. Feature Store Parameters
-- [ ] PICKUP_FEATURES_TABLE uses correct catalog prefix
-- [ ] DROP_FEATURES_TABLE uses correct catalog prefix
+- [ ] SIMPLE_FEATURES_TABLE uses correct catalog prefix
+# Removed pickup/dropoff feature tables - now using simplified approach:
+# - [ ] PICKUP_FEATURES_TABLE uses correct catalog prefix
+# - [ ] DROP_FEATURES_TABLE uses correct catalog prefix
 - [ ] Tables are consistently named across environments
 
 ### 4. Inference Parameters

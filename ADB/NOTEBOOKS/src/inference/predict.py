@@ -1,9 +1,10 @@
-import mlflow
-from pyspark.sql.functions import struct, lit, to_timestamp
-import pyspark.sql.functions as F
-from pyspark.sql.types import IntegerType
-from datetime import timedelta, timezone
 import math
+from datetime import timedelta, timezone
+
+import mlflow
+import pyspark.sql.functions as F
+from pyspark.sql.functions import lit, struct, to_timestamp
+from pyspark.sql.types import IntegerType
 
 
 def rounded_unix_timestamp(dt, num_minutes=15):
@@ -23,13 +24,13 @@ def preprocess_raw_data(raw_df):
     """
     Preprocess raw taxi data to create the rounded timestamp columns required for feature store lookups.
     This applies the same transformation used during training.
-    
+
     Args:
         raw_df: PySpark DataFrame with columns:
             - tpep_pickup_datetime (required for feature lookup)
             - tpep_dropoff_datetime (required for feature lookup)
             - Other columns like trip_distance, pickup_zip, dropoff_zip
-    
+
     Returns:
         DataFrame with:
             - rounded_pickup_datetime (15-minute intervals)
@@ -40,16 +41,16 @@ def preprocess_raw_data(raw_df):
     if "rounded_pickup_datetime" in raw_df.columns and "rounded_dropoff_datetime" in raw_df.columns:
         print("Data already preprocessed - skipping transformation")
         return raw_df
-    
+
     # Check if raw datetime columns exist
     if "tpep_pickup_datetime" not in raw_df.columns or "tpep_dropoff_datetime" not in raw_df.columns:
         raise ValueError(
             "Input data must contain 'tpep_pickup_datetime' and 'tpep_dropoff_datetime' columns "
             "for feature store lookups. Please ensure raw data has these timestamp columns."
         )
-    
+
     print("Preprocessing raw data: creating rounded timestamp columns for feature lookups...")
-    
+
     # Apply the same preprocessing used during training
     processed_df = (
         raw_df.withColumn(
@@ -71,7 +72,7 @@ def preprocess_raw_data(raw_df):
         .drop("tpep_pickup_datetime")
         .drop("tpep_dropoff_datetime")
     )
-    
+
     print("Preprocessing complete: rounded timestamps created")
     return processed_df
 
@@ -80,37 +81,57 @@ def predict_batch(
     spark_session, model_uri, input_table_name, model_version, ts
 ):
     """
-    This function automatically handles preprocessing of raw data, so it can accept either:
-    1. Raw data with tpep_pickup_datetime and tpep_dropoff_datetime (will be preprocessed)
-    2. Already preprocessed data with rounded_pickup_datetime and rounded_dropoff_datetime
-    
+    Simplified batch prediction using direct Spark SQL for feature retrieval.
+    No more complex FeatureLookup - just straightforward SQL joins!
+
     Args:
         spark_session: Active Spark session
         model_uri: URI of the registered model (e.g., "models:/model_name@alias")
-        input_table_name: Name of input table containing features
-        output_table_name: Name of output table to write predictions
+        input_table_name: Name of input table containing base data
         model_version: Version of the model being used
         ts: Timestamp for prediction metadata
     """
-    
+
     mlflow.set_registry_uri("databricks-uc")
-    
-    # Load input table
-    print(f"Loading input data from: {input_table_name}")
-    table = spark_session.table(input_table_name)
-    
-    # Automatically preprocess raw data if needed
-    # This ensures the data has the rounded timestamp columns required for feature store lookups
-    preprocessed_table = preprocess_raw_data(table)
-       
-    # Initialize Feature Engineering Client
-    from databricks.feature_engineering import FeatureEngineeringClient    
-    fe_client = FeatureEngineeringClient()
-    
-    print(f"Running batch inference with model: {model_uri}")
-    # Score batch - Feature Store will automatically join required features
-    prediction_df = fe_client.score_batch(model_uri=model_uri, df=preprocessed_table)
-    
+
+    # =============================================================================
+    # SIMPLIFIED APPROACH: Direct SQL Feature Retrieval
+    # =============================================================================
+    # Instead of complex FeatureLookup, use simple Spark SQL to get features
+    # This is much more readable and easier to debug!
+
+    print(f"Loading and enriching data from: {input_table_name}")
+
+    # Direct SQL approach - much simpler than FeatureLookup!
+    enriched_df = spark_session.sql(
+        f"""
+        SELECT
+            base.*,
+            -- Pickup features: Join with feature table directly
+            pickup.mean_fare_window_1h_pickup_zip,
+            pickup.count_trips_window_1h_pickup_zip,
+
+            -- Dropoff features: Join with feature table directly
+            dropoff.count_trips_window_30m_dropoff_zip,
+            dropoff.dropoff_is_weekend
+
+        FROM {input_table_name} base
+
+        -- Feature joins removed - using only simple_features now
+    """
+    )
+
+    print(f"✅ Features joined successfully using direct SQL")
+    print(f"📊 Enriched dataset shape: {enriched_df.count()} rows")
+
+    # Load model and predict directly on enriched dataframe
+    print(f"🚀 Running batch inference with model: {model_uri}")
+    model = mlflow.pyfunc.load_model(model_uri)
+
+    # Convert to Pandas for model prediction (if needed)
+    # Most MLflow models work well with Spark DataFrames directly
+    prediction_df = mlflow.pyfunc.spark_udf(spark_session, model_uri)(enriched_df)
+
     # Add metadata columns
     output_df = (
         prediction_df.withColumn("fare_amount", prediction_df["prediction"])
@@ -118,13 +139,6 @@ def predict_batch(
         .withColumn("timestamp", to_timestamp(lit(ts)))
         .drop("prediction")
     )
-    
+
     output_df.display()
-
-    # # Model predictions are written to the Delta table provided as input.
-    # # Delta is the default format in Databricks Runtime 8.0 and above.
-    # output_df.write.format("delta").mode("overwrite").option("mergeSchema", "true").saveAsTable(output_table_name)
-    
-    # print(f"Successfully wrote predictions to {output_table_name}")
-
     return output_df

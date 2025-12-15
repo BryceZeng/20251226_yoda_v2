@@ -123,18 +123,19 @@ if not input_table_path:
 # =============================================================================
 # These variables define which feature tables to use for model training
 # Modify these based on your feature engineering setup
-pickup_features_table = pp.get_config_value(
-    config,
-    "PICKUP_FEATURES_TABLE",
-    "PICKUP_FEATURES_TABLE",
-    "pru.pac_mlops.trip_pickup_features",
-)
-dropoff_features_table = pp.get_config_value(
-    config,
-    "DROP_FEATURES_TABLE",
-    "DROP_FEATURES_TABLE",
-    "pru.pac_mlops.trip_dropoff_features",
-)
+# pickup_features_table and dropoff_features_table removed - using only simple_features now
+# pickup_features_table = pp.get_config_value(
+#     config,
+#     "PICKUP_FEATURES_TABLE",
+#     "PICKUP_FEATURES_TABLE",
+#     "pru.pac_mlops.trip_pickup_features",
+# )
+# dropoff_features_table = pp.get_config_value(
+#     config,
+#     "DROP_FEATURES_TABLE",
+#     "DROP_FEATURES_TABLE",
+#     "pru.pac_mlops.trip_dropoff_features",
+# )
 
 # Print configuration for verification
 print(f"\nConfiguration Summary:")
@@ -143,8 +144,8 @@ print(f"- Catalog: {catalog}")
 print(f"- Training Data Path: {input_table_path}")
 print(f"- Model Name: {model_name}")
 print(f"- Experiment Name: {experiment_name}")
-print(f"- Pickup Features Table: {pickup_features_table}")
-print(f"- Dropoff Features Table: {dropoff_features_table}")
+# print(f"- Pickup Features Table: {pickup_features_table}")
+# print(f"- Dropoff Features Table: {dropoff_features_table}")
 
 # COMMAND ----------
 
@@ -241,41 +242,42 @@ print(f"Processed data columns: {taxi_data.columns}")
 # 4. Update timestamp keys for time-based features
 # =============================================================================
 
-# Pickup location features (typically aggregated over shorter time windows)
-pickup_feature_lookups = [
-    FeatureLookup(
-        table_name=pickup_features_table,
-        feature_names=[
-            "mean_fare_window_1h_pickup_zip",  # Average fare in 1-hour window
-            "count_trips_window_1h_pickup_zip",  # Trip count in 1-hour window
-            # Add more pickup features here as needed:
-            # "median_trip_distance_pickup_zip",
-            # "std_fare_pickup_zip",
-        ],
-        lookup_key=["pickup_zip"],  # Join on pickup location
-        timestamp_lookup_key=["rounded_pickup_datetime"],  # Time-aware lookup
-    ),
-]
+# Pickup location features removed - using only simple_features now
+# pickup_feature_lookups = [
+#     FeatureLookup(
+#         table_name=pickup_features_table,
+#         feature_names=[
+#             "mean_fare_window_1h_pickup_zip",  # Average fare in 1-hour window
+#             "count_trips_window_1h_pickup_zip",  # Trip count in 1-hour window
+#             # Add more pickup features here as needed:
+#             # "median_trip_distance_pickup_zip",
+#             # "std_fare_pickup_zip",
+#         ],
+#         lookup_key=["pickup_zip"],  # Join on pickup location
+#         timestamp_lookup_key=["rounded_pickup_datetime"],  # Time-aware lookup
+#     ),
+# ]
 
-# Dropoff location features (typically aggregated over different time windows)
-dropoff_feature_lookups = [
-    FeatureLookup(
-        table_name=dropoff_features_table,
-        feature_names=[
-            "count_trips_window_30m_dropoff_zip",  # Trip count in 30-minute window
-            "dropoff_is_weekend",  # Weekend indicator
-            # Add more dropoff features here as needed:
-            # "popular_destination_score",
-            # "avg_wait_time_dropoff_zip",
-        ],
-        lookup_key=["dropoff_zip"],  # Join on dropoff location
-        timestamp_lookup_key=["rounded_dropoff_datetime"],  # Time-aware lookup
-    ),
-]
+# Dropoff location features removed - using only simple_features now
+# dropoff_feature_lookups = [
+#     FeatureLookup(
+#         table_name=dropoff_features_table,
+#         feature_names=[
+#             "count_trips_window_30m_dropoff_zip",  # Trip count in 30-minute window
+#             "dropoff_is_weekend",  # Weekend indicator
+#             # Add more dropoff features here as needed:
+#             # "popular_destination_score",
+#             # "avg_wait_time_dropoff_zip",
+#         ],
+#         lookup_key=["dropoff_zip"],  # Join on dropoff location
+#         timestamp_lookup_key=["rounded_dropoff_datetime"],  # Time-aware lookup
+#     ),
+# ]
 
-print(f"Configured {len(pickup_feature_lookups)} pickup feature lookup(s)")
-print(f"Configured {len(dropoff_feature_lookups)} dropoff feature lookup(s)")
-print("Feature lookups created successfully")
+# Feature lookups simplified - using only simple features
+feature_lookups = []  # Empty for now, simple_features will be used directly
+
+print("Feature lookups removed - using simple features approach")
 
 # COMMAND ----------
 
@@ -314,12 +316,11 @@ print(f"Excluding columns from training: {exclude_columns}")
 # Initialize Feature Engineering Client
 fe = FeatureEngineeringClient()
 
-# Create training set with feature store integration
-print("Creating training set with feature store integration...")
+# Create training set with simplified approach (no complex feature lookups)
+print("Creating training set with simplified feature approach...")
 training_set = fe.create_training_set(
     df=taxi_data,  # Base training data
-    feature_lookups=pickup_feature_lookups
-    + dropoff_feature_lookups,  # All feature lookups
+    feature_lookups=feature_lookups,  # Empty feature lookups - using simple features instead
     label="fare_amount",  # Target variable (customize for your use case)
     exclude_columns=exclude_columns,
 )

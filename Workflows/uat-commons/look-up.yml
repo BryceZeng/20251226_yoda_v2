@@ -56,13 +56,18 @@ variables:
    # Feature Store Configuration
    # =============================================================================
 
-   PICKUP_FEATURES_TABLE:
-      description: "Feature store table for pickup location features (UAT)"
-      default: pru_uat.pac_mlops.trip_pickup_features
+   SIMPLE_FEATURES_TABLE:
+      description: "Feature store table for simple trip features"
+      default: pru_uat.pac_mlops.trip_simple_features
 
-   DROP_FEATURES_TABLE:
-      description: "Feature store table for dropoff location features (UAT)"
-      default: pru_uat.pac_mlops.trip_dropoff_features
+   # PICKUP_FEATURES_TABLE and DROP_FEATURES_TABLE removed - using SIMPLE_FEATURES_TABLE instead
+   # PICKUP_FEATURES_TABLE:
+   #    description: "Feature store table for pickup location features"
+   #    default: pru_uat.pac_mlops.trip_pickup_features
+
+   # DROP_FEATURES_TABLE:
+   #    description: "Feature store table for dropoff location features"
+   #    default: pru_uat.pac_mlops.trip_dropoff_features
 
    # =============================================================================
    # Inference Configuration

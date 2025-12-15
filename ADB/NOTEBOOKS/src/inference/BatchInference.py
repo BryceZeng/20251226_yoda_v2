@@ -7,7 +7,8 @@
 
 import os
 
-from databricks.feature_engineering import FeatureLookup
+# Simplified imports
+# from databricks.feature_engineering import FeatureLookup  # REMOVED - using direct SQL now
 from databricks.feature_engineering import FeatureEngineeringClient
 
 import mlflow

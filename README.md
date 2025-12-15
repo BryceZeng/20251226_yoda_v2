@@ -77,8 +77,11 @@ pacs-743-model_deployment_template/
 │           │  ├─ __init__.py               # Package marker
 │           │  ├─ features/
 │           │  │  ├─ __init__.py            # Feature module marker
-│           │  │  ├─ dropoff_features.py    # Feature generation for drop-offs
-│           │  │  └─ pickup_features.py     # Feature generation for pick-ups
+│           │  │  ├─ simple_features.py     # Main feature generation logic
+│           │  │  └─ __init__.py            # Package initialization
+│           │  │  # Removed files:
+│           │  │  # ├─ dropoff_features.py    # Feature generation for drop-offs (REMOVED)
+│           │  │  # └─ pickup_features.py     # Feature generation for pick-ups (REMOVED)
 │           │  └─ notebooks/
 │           │     └─ GenerateAndWriteFeatures.py # Notebook to materialize feats
 │           └─ validation/

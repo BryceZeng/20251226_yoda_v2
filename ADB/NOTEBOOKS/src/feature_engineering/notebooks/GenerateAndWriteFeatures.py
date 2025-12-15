@@ -50,13 +50,13 @@ dbutils.widgets.text(
 # Feature table to store the computed features.
 dbutils.widgets.text(
     "output_table_name",
-    "pru.mlops.trip_pickup_features",
+    "pru.mlops.trip_simple_features",
     label="Output Feature Table Name",
 )
 
 # Feature transform module name.
 dbutils.widgets.text(
-    "features_transform_module", "pickup_features", label="Features transform file."
+    "features_transform_module", "simple_features", label="Features transform file."
 )
 # Primary Keys columns for the feature table;
 dbutils.widgets.text(
@@ -125,7 +125,7 @@ fe = FeatureEngineeringClient()
 # Create the feature table if it does not exist first.
 # Note that this is a no-op if a table with the same name and schema already exists.
 fe.create_table(
-    name=output_table_name,    
+    name=output_table_name,
     primary_keys=[x.strip() for x in pk_columns.split(",")] + [ts_column],  # Include timeseries column in primary_keys
     timestamp_keys=[ts_column],
     df=features_df,
