@@ -14,8 +14,8 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    promote_model_job:
-      name: ${bundle.target}-pac-mlops-promote-model-job_test
+    promote_model_workflow_job:
+      name: ${bundle.target}-pac_mlops-promote-model-job
       tasks:
         - task_key: promote_model_job
           # existing_cluster_id: ${var.cluster_id}
