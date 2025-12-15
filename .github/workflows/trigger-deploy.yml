@@ -4,7 +4,7 @@ on:
     branches:
       - master
       - develop
-      - feature/new_change
+      - feature/bryce_v4
 
 jobs:
     ## move the secrets to org level , remove from repo level
@@ -37,7 +37,7 @@ jobs:
               HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
               GIT_TOKEN : ${{secrets.GIT_TOKEN}}
     call-feature:
-      if: github.ref == 'refs/heads/feature/new_change'
+      if: github.ref == 'refs/heads/feature/bryce_v4'
       uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
       with:
         ENVIRONMENT: dev
