@@ -4,7 +4,6 @@ on:
     branches:
       - master
       - develop
-      - feature/bryce_v4
 
 jobs:
     ## move the secrets to org level , remove from repo level
@@ -13,9 +12,9 @@ jobs:
       uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
       with:
         ENVIRONMENT: prod
-        PROJECT_NAME: pacs-743-model-deployment-template_prod
-        FOLDER_NAME: /Workspace/Shared/model-deployment-template_prod
-        RUNNER: dev-runner
+        PROJECT_NAME: pacs-743-model-deployment-template
+        FOLDER_NAME: /Workspace/Projects/pacs-743-model-deployment-template
+        RUNNER: prod-runner
         JOB_NAME: promote_model_job
       secrets:
               TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
@@ -28,21 +27,7 @@ jobs:
       with:
         ENVIRONMENT: dev
         PROJECT_NAME: pacs-743-model-deployment-template
-        FOLDER_NAME: /Workspace/pacs-743-model-deployment-template
-        RUNNER: dev-runner
-        JOB_NAME: model_training_job
-        UNIT_TEST_JOB_NAME: unit_test_job
-      secrets:
-              TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
-              HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
-              GIT_TOKEN : ${{secrets.GIT_TOKEN}}
-    call-feature:
-      if: github.ref == 'refs/heads/feature/bryce_v4'
-      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
-      with:
-        ENVIRONMENT: dev
-        PROJECT_NAME: pacs-743-model-testmlops
-        FOLDER_NAME: /Workspace/model-testmlops
+        FOLDER_NAME: /Workspace/Projects/pacs-743-model-deployment-template
         RUNNER: dev-runner
         JOB_NAME: model_training_job
         UNIT_TEST_JOB_NAME: unit_test_job
