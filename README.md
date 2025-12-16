@@ -8,6 +8,8 @@ want to copy this repository as an MLOps template.
 
 ### Getting Started
 
+Refer to https://collaborate.pruconnect.net/display/PACSDataHub/MLOps+Runbook
+
 Prerequisites
 
 > Azure Databricks workspace access

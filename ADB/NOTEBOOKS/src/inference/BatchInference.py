@@ -164,8 +164,10 @@ try:
 
     print(f"📤 Saving enriched predictions to: {output_table_name}")
 
-    # Write predictions to output table in append mode
-    enriched_predictions.write.mode("append").saveAsTable(output_table_name)
+    # Write predictions to output table in append mode with schema evolution enabled
+    enriched_predictions.write.mode("append").option("mergeSchema", "true").saveAsTable(
+        output_table_name
+    )
 
     print("✅ Predictions saved successfully")
 
