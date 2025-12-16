@@ -62,6 +62,7 @@ try:
     id_col = dbutils.widgets.get("ID_COL")
     prediction_col = dbutils.widgets.get("PREDICTION_COL")
     project_name = dbutils.widgets.get("PROJECT_NAME")
+    granularity = dbutils.widgets.get("GRANULARITY")
 
     print("✅ Parameter extraction successful:")
     print(f"   Input Table: {input_table_name}")
@@ -111,6 +112,7 @@ try:
         input_table_name=input_table_name,
         model_version=model_version,
         ts=prediction_timestamp,
+        granularity=granularity,
     )
 
     print(f"✅ Batch inference completed successfully")
@@ -142,6 +144,9 @@ try:
         .withColumnRenamed(
             prediction_col, "prediction"
         )  # Standardized prediction column
+        .withColumn(
+            "prediction", col("prediction").cast("string")
+        )  # Convert to string type
         .withColumn("prediction_type", lit(prediction_type))  # Data type metadata
         .withColumn("project_name", lit(project_name))  # Project identifier
         .select(
@@ -152,6 +157,7 @@ try:
             "prediction",
             "prediction_type",
             "project_name",
+            "granularity",
             "timestamp",
         )
     )

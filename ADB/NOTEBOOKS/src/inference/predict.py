@@ -120,7 +120,7 @@ def preprocess_raw_data(raw_df):
 
 
 def predict_batch(
-    spark_session, model_uri: str, input_table_name: str, model_version: str, ts: str
+    spark_session, model_uri: str, input_table_name: str, model_version: str, ts: str, granularity: str = "party"
 ):
     """
     Executes optimized batch prediction with feature enrichment.
@@ -135,6 +135,7 @@ def predict_batch(
         input_table_name: Name of input table containing base prediction data
         model_version: Version identifier of the model being used
         ts: Timestamp string for prediction metadata
+        granularity: Granularity level for predictions (e.g., party, claims, agent)
 
     Returns:
         PySpark DataFrame with predictions and metadata columns:
@@ -142,6 +143,7 @@ def predict_batch(
             - fare_amount: Model prediction results
             - model_id: Model version used
             - timestamp: Prediction execution time
+            - granularity: Prediction granularity level
 
     Raises:
         Exception: If model loading or prediction fails
@@ -217,10 +219,11 @@ def predict_batch(
     # Standardize output format with comprehensive metadata
     output_df = (
         prediction_df.withColumn(
-            "fare_amount", prediction_df["prediction"]
-        )  # Rename prediction column
+            "fare_amount", prediction_df["prediction"].cast("string")
+        )  # Rename prediction column and cast to string
         .withColumn("model_id", lit(model_version))  # Track model version
         .withColumn("timestamp", to_timestamp(lit(ts)))  # Prediction timestamp
+        .withColumn("granularity", lit(granularity))  # Add granularity level
         .drop("prediction")  # Remove original prediction column
     )
 

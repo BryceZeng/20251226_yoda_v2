@@ -105,6 +105,10 @@ variables:
       description: "Ground truth column name for validation (same as PREDICTION_COL)"
       default: fare_amount
 
+   GRANULARITY:
+      description: "Granularity level for predictions (e.g., party, claims, agent, policy)"
+      default: party
+
    # =============================================================================
    # Compute Configuration
    # =============================================================================
