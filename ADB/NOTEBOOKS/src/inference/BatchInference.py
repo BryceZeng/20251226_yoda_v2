@@ -164,8 +164,23 @@ try:
 
     print(f"📤 Saving enriched predictions to: {output_table_name}")
 
+    # Parse catalog, schema, and table from full table name
+    table_parts = output_table_name.split(".")
+    if len(table_parts) == 3:
+        catalog_name, schema_name, table_name = table_parts
+        # Ensure catalog and schema exist
+        spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog_name}")
+        spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name}")
+        print(f"✅ Catalog and schema verified: {catalog_name}.{schema_name}")
+
     # Check if table exists and use appropriate write mode
-    if spark.catalog.tableExists(output_table_name):
+    try:
+        table_exists = spark.catalog.tableExists(output_table_name)
+    except Exception as e:
+        print(f"⚠️  Could not check table existence: {str(e)}")
+        table_exists = False
+
+    if table_exists:
         print("📋 Table exists - appending with schema evolution...")
         enriched_predictions.write.mode("append").option(
             "mergeSchema", "true"
