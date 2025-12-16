@@ -15,7 +15,7 @@ jobs:
         PROJECT_NAME: pacs-743-model-deployment-template
         FOLDER_NAME: /Workspace/Projects/pacs-743-model-deployment-template
         RUNNER: prod-runner
-        JOB_NAME: promote_model_job
+        JOB_NAME: promote_model_job # model_training_job for training job
       secrets:
               TOKEN: ${{ secrets.PERSONAL_PRD2_ACCESS_TOKEN }}
               HOST : ${{secrets.DATABRICKS_PRD2_HOST}}

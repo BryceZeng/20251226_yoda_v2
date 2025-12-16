@@ -168,10 +168,22 @@ try:
     table_parts = output_table_name.split(".")
     if len(table_parts) == 3:
         catalog_name, schema_name, table_name = table_parts
+
+        # Set current catalog for Unity Catalog
+        spark.sql(f"USE CATALOG {catalog_name}")
+        print(f"✅ Using catalog: {catalog_name}")
+
         # Ensure catalog and schema exist
-        spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog_name}")
-        spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name}")
-        print(f"✅ Catalog and schema verified: {catalog_name}.{schema_name}")
+        try:
+            spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog_name}")
+            spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name}")
+            print(f"✅ Catalog and schema verified: {catalog_name}.{schema_name}")
+        except Exception as e:
+            print(f"⚠️  Catalog/schema creation warning: {str(e)}")
+
+    # Display sample of data to be written
+    print("📋 Sample of enriched predictions:")
+    enriched_predictions.show(5, truncate=False)
 
     # Check if table exists and use appropriate write mode
     try:
@@ -182,16 +194,28 @@ try:
 
     if table_exists:
         print("📋 Table exists - appending with schema evolution...")
-        enriched_predictions.write.mode("append").option(
-            "mergeSchema", "true"
-        ).saveAsTable(output_table_name)
+        write_mode = "append"
     else:
         print("🆕 Table doesn't exist - creating new table...")
-        enriched_predictions.write.mode("overwrite").option(
-            "mergeSchema", "true"
-        ).saveAsTable(output_table_name)
+        write_mode = "overwrite"
+
+    # Write to table with detailed logging
+    print(
+        f"💾 Writing {enriched_predictions.count()} records in '{write_mode}' mode..."
+    )
+    enriched_predictions.write.format("delta").mode(write_mode).option(
+        "mergeSchema", "true"
+    ).option(
+        "overwriteSchema", "true" if write_mode == "overwrite" else "false"
+    ).saveAsTable(
+        output_table_name
+    )
 
     print("✅ Predictions saved successfully")
+
+    # Verify write by reading back
+    result_count = spark.table(output_table_name).count()
+    print(f"📊 Verification: Table now contains {result_count} total records")
 
 except Exception as e:
     error_msg = f"Failed to save predictions: {str(e)}"
