@@ -164,10 +164,17 @@ try:
 
     print(f"📤 Saving enriched predictions to: {output_table_name}")
 
-    # Write predictions to output table in append mode with schema evolution enabled
-    enriched_predictions.write.mode("append").option("mergeSchema", "true").saveAsTable(
-        output_table_name
-    )
+    # Check if table exists and use appropriate write mode
+    if spark.catalog.tableExists(output_table_name):
+        print("📋 Table exists - appending with schema evolution...")
+        enriched_predictions.write.mode("append").option(
+            "mergeSchema", "true"
+        ).saveAsTable(output_table_name)
+    else:
+        print("🆕 Table doesn't exist - creating new table...")
+        enriched_predictions.write.mode("overwrite").option(
+            "mergeSchema", "true"
+        ).saveAsTable(output_table_name)
 
     print("✅ Predictions saved successfully")
 
