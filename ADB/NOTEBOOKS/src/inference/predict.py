@@ -144,6 +144,7 @@ def predict_batch(
             - model_id: Model version used
             - timestamp: Prediction execution time
             - granularity: Prediction granularity level
+            - Additional metadata as needed
 
     Raises:
         Exception: If model loading or prediction fails
