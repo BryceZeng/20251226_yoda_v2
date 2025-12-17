@@ -29,6 +29,8 @@ resources:
                 package: mlflow
             - pypi:
                 package: scikit-learn
+            - pypi:
+                package: databricks-feature-engineering
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/inference/BatchInference.py
             base_parameters:
