@@ -81,14 +81,38 @@ try:
     # Initialize MLflow client with Unity Catalog
     client = MlflowClient(registry_uri="databricks-uc")
 
+    # Check if model exists
+    try:
+        model_info = client.get_registered_model(model_name)
+        print(f"✅ Model found: {model_name}")
+    except Exception as model_err:
+        error_msg = f"Model '{model_name}' not found in registry: {str(model_err)}"
+        print(f"❌ {error_msg}")
+        print(
+            "💡 Tip: Ensure the training workflow has completed and registered a model"
+        )
+        dbutils.notebook.exit(error_msg)
+
     # Get the specific version of the champion model
-    model_version = client.get_model_version_by_alias(model_name, alias).version
+    try:
+        model_version = client.get_model_version_by_alias(model_name, alias).version
+        print(f"✅ Found champion model alias")
+    except Exception as alias_err:
+        error_msg = (
+            f"No '{alias}' alias found for model '{model_name}': {str(alias_err)}"
+        )
+        print(f"❌ {error_msg}")
+        print(
+            f"💡 Tip: Run the model training workflow first or set the champion alias manually"
+        )
+        dbutils.notebook.exit(error_msg)
 
     # Generate timestamp for prediction tracking
     prediction_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print(f"🎯 Model configuration:")
     print(f"   Champion Model Version: {model_version}")
+    print(f"   Model URI: {model_uri}")
     print(f"   Prediction Timestamp: {prediction_timestamp}")
 
 except Exception as e:
@@ -115,8 +139,15 @@ try:
         granularity=granularity,
     )
 
+    prediction_count = predictions_df.count()
     print(f"✅ Batch inference completed successfully")
-    print(f"📊 Generated {predictions_df.count()} predictions")
+    print(f"📊 Generated {prediction_count} predictions")
+
+    if prediction_count == 0:
+        print("⚠️  WARNING: No predictions were generated!")
+        print(f"   Input table '{input_table_name}' may be empty or have no valid rows")
+        print("   Exiting without writing to predictions table")
+        dbutils.notebook.exit("No predictions generated - input data empty")
 
 except Exception as e:
     error_msg = f"Batch inference failed: {str(e)}"
@@ -129,11 +160,31 @@ except Exception as e:
 try:
     print("📝 Enriching predictions with tracking metadata...")
 
+    # Debug: Show what columns we have
+    print(f"📋 Available columns: {predictions_df.columns}")
+    print(f"🔍 Looking for column: '{prediction_col}'")
+
     # Generate unique identifier for this prediction batch
     batch_uuid = uuid.uuid4().hex
 
+    # Validate prediction column exists
+    if prediction_col not in predictions_df.columns:
+        available_cols = ", ".join(predictions_df.columns)
+        error_msg = f"Prediction column '{prediction_col}' not found in DataFrame. Available columns: {available_cols}"
+        print(f"❌ {error_msg}")
+        dbutils.notebook.exit(error_msg)
+
     # Get prediction column data type for metadata
     prediction_type = predictions_df.schema[prediction_col].dataType.simpleString()
+
+    # Validate ID column exists
+    if id_col not in predictions_df.columns:
+        available_cols = ", ".join(predictions_df.columns)
+        error_msg = f"ID column '{id_col}' not found in DataFrame. Available columns: {available_cols}"
+        print(f"❌ {error_msg}")
+        dbutils.notebook.exit(error_msg)
+
+    print(f"✅ Validated required columns: '{id_col}' and '{prediction_col}'")
 
     # Enrich predictions with comprehensive metadata for tracking and auditing
     enriched_predictions = (
