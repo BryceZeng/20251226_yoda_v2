@@ -226,20 +226,25 @@ def load_input_data(table_path):
                 raw_data = spark.read.format("delta").load(table_path)
                 print(f"✅ Successfully loaded Delta table")
                 return raw_data
-            except:
+            except Exception as delta_error:
+                print(f"⚠️  Delta format not found, trying CSV format...")
                 pass
 
         # If Delta fails, try CSV format
-        if table_path.endswith('.csv') or '/subsampled' in table_path:
-            raw_data = (
-                spark.read
-                .format("csv")
-                .option("header", True)
-                .option("inferSchema", True)
-                .load(table_path)
-            )
-            print(f"✅ Successfully loaded CSV data")
-            return raw_data
+        if table_path.endswith('.csv') or '/subsampled' in table_path or '/test' in table_path:
+            try:
+                raw_data = (
+                    spark.read
+                    .format("csv")
+                    .option("header", True)
+                    .option("inferSchema", True)
+                    .load(table_path)
+                )
+                print(f"✅ Successfully loaded CSV data")
+                return raw_data
+            except Exception as csv_error:
+                print(f"⚠️  CSV format failed, trying table read...")
+                pass
 
         # Default to table read
         raw_data = spark.table(table_path)

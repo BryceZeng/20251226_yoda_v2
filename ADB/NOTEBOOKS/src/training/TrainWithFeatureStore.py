@@ -94,7 +94,10 @@ print(f"Configuration loaded with {len(config)} variables")
 schema = pp.get_config_value(config, "SCHEMA", "SCHEMA", "pac_mlops")
 catalog = pp.get_config_value(config, "CATALOG", "CATALOG", "pru")
 input_table_path = pp.get_config_value(
-    config, "TRAINING_DATA_PATH", "TRAINING_DATA_PATH", "/Volumes/pru/pac_mlops/test"
+    config,
+    "TRAINING_DATA_PATH",
+    "TRAINING_DATA_PATH",
+    "/Volumes/pru/pac_mlops/test/nyctaxi-with-zipcodes.csv",
 )
 model_name = pp.get_config_value(
     config, "MODEL_NAME", "MODEL_NAME", "pru.pac_mlops.pac_mlops-model"
@@ -114,9 +117,9 @@ if not model_name:
     model_name = "pru.pac_mlops.pac_mlops-model"
 if not input_table_path:
     print(
-        "Warning: TRAINING_DATA_PATH not found, using default: /Volumes/pru/pac_mlops/test"
+        "Warning: TRAINING_DATA_PATH not found, using default: /Volumes/pru/pac_mlops/test/nyctaxi-with-zipcodes.csv"
     )
-    input_table_path = "/Volumes/pru/pac_mlops/test"
+    input_table_path = "/Volumes/pru/pac_mlops/test/nyctaxi-with-zipcodes.csv"
 
 # =============================================================================
 # Feature Store Configuration

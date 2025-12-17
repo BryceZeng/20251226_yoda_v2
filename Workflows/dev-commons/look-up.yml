@@ -34,7 +34,7 @@ variables:
 
    TRAINING_DATA_PATH:
       description: "Path to training data in Unity Catalog volumes"
-      default: /Volumes/pru/pac_mlops/test
+      default: /Volumes/pru/pac_mlops/test/nyctaxi-with-zipcodes.csv
 
    # =============================================================================
    # Model Configuration
