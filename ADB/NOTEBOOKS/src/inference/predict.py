@@ -182,18 +182,22 @@ def predict_batch(
         error_msg = f"Failed to load input data: {str(e)}"
         print(f"❌ {error_msg}")
         raise Exception(error_msg)
-    
+
     # =============================================================================
     # Data Preprocessing - Apply same transformations as training
     # =============================================================================
     print("🔄 Preprocessing data (adding rounded timestamps)...")
-    
+
     try:
         # Apply preprocessing to match training data format
         base_df = preprocess_raw_data(base_df)
         print(f"✅ Data preprocessed: {len(base_df.columns)} columns")
         print(f"📋 Preprocessed columns: {base_df.columns}")
-    
+
+        # Show sample data after preprocessing
+        print("📋 Sample of preprocessed data:")
+        base_df.show(3, truncate=False)
+
     except Exception as e:
         print(f"⚠️  Preprocessing failed: {str(e)}")
         print("   Proceeding with raw data - model may fail if schema doesn't match training")
@@ -245,23 +249,83 @@ def predict_batch(
         # Load model from MLflow registry
         model = mlflow.pyfunc.load_model(model_uri)
         print(f"✅ Model loaded successfully")
-        
-        # Show model signature for debugging
+
+        # Get model signature to understand expected inputs
+        model_info = None
+        expected_columns = None
         try:
             model_info = mlflow.models.get_model_info(model_uri)
-            if model_info.signature:
-                print(f"📋 Model expected inputs: {model_info.signature.inputs}")
-                print(f"📋 Model expected outputs: {model_info.signature.outputs}")
+            if model_info.signature and model_info.signature.inputs:
+                expected_columns = [
+                    input.name for input in model_info.signature.inputs.inputs
+                ]
+                print(f"📋 Model expects {len(expected_columns)} input columns")
+                print(f"📋 Expected columns: {expected_columns}")
+            else:
+                print(f"⚠️  Model has no signature - will use all available columns")
         except Exception as sig_err:
             print(f"⚠️  Could not retrieve model signature: {sig_err}")
+            print(f"   Will attempt prediction with available columns")
 
-        # Show what columns we're providing
-        print(f"📊 Providing columns to model: {enriched_df.columns}")
-        
-        # Execute batch prediction using MLflow's Spark UDF for optimal performance
+        # Show what columns we have available
+        available_columns = enriched_df.columns
+        print(f"📊 Available columns ({len(available_columns)}): {available_columns}")
+
+        # Prepare DataFrame for prediction - match model's expected schema
+        if expected_columns:
+            # Filter to only include columns the model expects
+            missing_columns = [
+                col for col in expected_columns if col not in available_columns
+            ]
+            extra_columns = [
+                col for col in available_columns if col not in expected_columns
+            ]
+
+            if missing_columns:
+                error_msg = f"Missing required columns: {missing_columns}"
+                print(f"❌ {error_msg}")
+                print(f"   Available columns: {available_columns}")
+                print(f"   Expected columns: {expected_columns}")
+                raise Exception(error_msg)
+
+            if extra_columns:
+                print(f"ℹ️  Extra columns will be preserved: {extra_columns}")
+
+            # Select columns in the order expected by the model
+            print(f"🔧 Selecting {len(expected_columns)} columns for prediction...")
+            prediction_input = enriched_df.select(*expected_columns)
+        else:
+            # No signature available - use all columns except known non-features
+            columns_to_exclude = ["rounded_pickup_datetime", "rounded_dropoff_datetime"]
+            feature_columns = [
+                col for col in available_columns if col not in columns_to_exclude
+            ]
+            print(f"🔧 Using {len(feature_columns)} columns (excluding timestamps)...")
+            prediction_input = enriched_df.select(*feature_columns)
+
+        print(
+            f"📊 Prediction input shape: {prediction_input.count()} rows, {len(prediction_input.columns)} columns"
+        )
+
+        # Execute batch prediction - Convert to Pandas and back to Spark for better compatibility
         print("🔮 Executing batch predictions...")
-        prediction_df = mlflow.pyfunc.spark_udf(spark_session, model_uri)(enriched_df)
 
+        # Convert to Pandas for prediction (more robust than spark_udf)
+        input_pandas = prediction_input.toPandas()
+        print(f"✅ Converted {len(input_pandas)} rows to Pandas for prediction")
+
+        # Make predictions
+        predictions = model.predict(input_pandas)
+        print(f"✅ Generated {len(predictions)} predictions")
+
+        # Add predictions back to the original DataFrame
+        import pandas as pd
+
+        output_pandas = input_pandas.copy()
+        output_pandas["prediction"] = predictions
+
+        # Convert back to Spark DataFrame
+        prediction_df = spark_session.createDataFrame(output_pandas)
         print(f"✅ Prediction completed successfully")
 
     except Exception as e:
@@ -271,6 +335,8 @@ def predict_batch(
         print(f"   - Ensure input data has the same features used during training")
         print(f"   - Check that preprocessing is applied correctly")
         print(f"   - Available columns: {enriched_df.columns}")
+        if expected_columns:
+            print(f"   - Model expected columns: {expected_columns}")
         raise Exception(error_msg)
 
     # =============================================================================

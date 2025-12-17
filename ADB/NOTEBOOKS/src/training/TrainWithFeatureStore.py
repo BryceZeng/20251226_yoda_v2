@@ -621,6 +621,17 @@ print(f"Model is ready for validation and deployment workflows")
 # This information enables automated deployment workflows and model validation.
 # =============================================================================
 
+# from deployment.deploy_endpoint import deploy_model_endpoint
+
+# result = deploy_model_endpoint(
+#     token=dbutils.secrets.get("ml-secrets", "databricks-token"),
+#     catalog="analytics_uc",
+#     schema="ml_models",
+#     model_name="my_model",
+#     endpoint_name="my-model-api",
+# )
+
+
 # Export model information for downstream tasks
 print("Exporting model information for deployment pipeline...")
 
