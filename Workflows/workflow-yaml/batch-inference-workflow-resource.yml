@@ -23,14 +23,7 @@ resources:
           existing_cluster_id: ${var.cluster_id}
           # <<: *new_cluster
           libraries:
-            - pypi:
-                package: lightgbm
-            - pypi:
-                package: mlflow
-            - pypi:
-                package: scikit-learn
-            - pypi:
-                package: databricks-feature-engineering
+            - requirements: ../../requirements.txt
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/inference/BatchInference.py
             base_parameters:
