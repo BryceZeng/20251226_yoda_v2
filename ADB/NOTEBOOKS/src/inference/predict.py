@@ -154,27 +154,53 @@ def predict_batch(
     mlflow.set_registry_uri("databricks-uc")
 
     # =============================================================================
+    # Data Loading - Support both CSV files and Delta tables
+    # =============================================================================
+    print(f"📊 Loading data from: {input_table_name}")
+
+    try:
+        # Check if input is a file path (CSV) or table name
+        if input_table_name.endswith(".csv") or "/Volumes/" in input_table_name:
+            print("📁 Loading data from CSV file...")
+            base_df = (
+                spark_session.read.format("csv")
+                .option("header", True)
+                .option("inferSchema", True)
+                .load(input_table_name)
+            )
+        else:
+            print("📊 Loading data from Delta table...")
+            base_df = spark_session.table(input_table_name)
+
+        print(f"✅ Data loaded: {base_df.count()} rows, {len(base_df.columns)} columns")
+
+    except Exception as e:
+        error_msg = f"Failed to load input data: {str(e)}"
+        print(f"❌ {error_msg}")
+        raise Exception(error_msg)
+
+    # =============================================================================
     # Feature Enrichment with Optimized SQL
     # =============================================================================
-    print(f"📊 Loading and enriching data from: {input_table_name}")
+    print(f"📊 Enriching data with features...")
+
+    # Create temp view for SQL queries
+    base_df.createOrReplaceTempView("inference_input_temp")
 
     # Direct SQL approach for feature joins - much simpler and faster than FeatureLookup
     enrichment_query = f"""
         SELECT
-            base.*,
+            base.*
 
-            -- Pickup location features (1-hour time window)
-            pickup.mean_fare_window_1h_pickup_zip,
-            pickup.count_trips_window_1h_pickup_zip,
+            -- Note: Feature table joins removed for simplified implementation
+            -- Add feature table joins here when feature tables are available:
+            -- , pickup.mean_fare_window_1h_pickup_zip
+            -- , pickup.count_trips_window_1h_pickup_zip
+            -- , dropoff.count_trips_window_30m_dropoff_zip
+            -- , dropoff.dropoff_is_weekend
 
-            -- Dropoff location features (30-minute time window)
-            dropoff.count_trips_window_30m_dropoff_zip,
-            dropoff.dropoff_is_weekend
+        FROM inference_input_temp base
 
-        FROM {input_table_name} base
-
-        -- Note: Feature table joins removed for simplified implementation
-        -- Add feature table joins here when feature tables are available:
         -- LEFT JOIN feature_store.pickup_features pickup ON ...
         -- LEFT JOIN feature_store.dropoff_features dropoff ON ...
     """
@@ -188,7 +214,7 @@ def predict_batch(
         print(f"❌ Feature enrichment failed: {str(e)}")
         # Fallback: use input data without feature enrichment
         print("⚠️  Proceeding with base features only")
-        enriched_df = spark_session.table(input_table_name)
+        enriched_df = base_df
 
     # =============================================================================
     # Model Loading and Prediction

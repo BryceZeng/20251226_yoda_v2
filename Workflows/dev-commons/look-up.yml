@@ -75,7 +75,7 @@ variables:
 
    INFERENCE_INPUT_TABLE:
       description: "Input table for batch inference pipeline"
-      default: pru.pac_mlops.feature_store_inference_input
+      default: /Volumes/pru/pac_mlops/test/nyctaxi-with-zipcodes.csv
 
    OUTPUT_PREDICTION_TABLE:
       description: "Output table for prediction results"
