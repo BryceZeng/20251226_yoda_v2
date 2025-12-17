@@ -1,3 +1,6 @@
 databricks-sdk
 pandas>=1.0.0
 numpy>=1.18.0
+lightgbm
+mlflow
+scikit-learn
