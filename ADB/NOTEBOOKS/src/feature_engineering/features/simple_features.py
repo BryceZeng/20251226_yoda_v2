@@ -24,40 +24,51 @@ def create_simple_features_sql(input_table, start_date=None, end_date=None):
         date_filter += f" AND tpep_pickup_datetime < '{end_date}'"
 
     sql = f"""
+    WITH hourly_aggregated AS (
+        SELECT
+            pickup_zip,
+            dropoff_zip,
+            date_trunc('hour', tpep_pickup_datetime) as rounded_datetime,
+
+            -- Simple aggregations - easy to understand and maintain!
+            AVG(fare_amount) as mean_fare_amount,
+            COUNT(*) as trip_count,
+            AVG(trip_distance) as mean_trip_distance,
+            MAX(fare_amount) as max_fare_amount,
+            MIN(fare_amount) as min_fare_amount
+
+        FROM {input_table}
+        WHERE pickup_zip IS NOT NULL
+          AND dropoff_zip IS NOT NULL
+          AND fare_amount > 0
+          {date_filter}
+        GROUP BY
+            pickup_zip,
+            dropoff_zip,
+            date_trunc('hour', tpep_pickup_datetime)
+    )
     SELECT
         pickup_zip as zip,
         dropoff_zip,
-        -- Use simple time windows
-        date_trunc('hour', tpep_pickup_datetime) as rounded_datetime,
-        date_format(tpep_pickup_datetime, 'yyyy-MM') as yyyy_mm,
+        rounded_datetime,
+        date_format(rounded_datetime, 'yyyy-MM') as yyyy_mm,
 
-        -- Simple aggregations - easy to understand and maintain!
-        AVG(fare_amount) as mean_fare_amount,
-        COUNT(*) as trip_count,
-        AVG(trip_distance) as mean_trip_distance,
-        MAX(fare_amount) as max_fare_amount,
-        MIN(fare_amount) as min_fare_amount,
+        -- Aggregated features
+        mean_fare_amount,
+        trip_count,
+        mean_trip_distance,
+        max_fare_amount,
+        min_fare_amount,
 
-        -- Time-based features
+        -- Time-based features derived from rounded_datetime
         CASE
-            WHEN dayofweek(tpep_pickup_datetime) IN (1, 7) THEN 1
+            WHEN dayofweek(rounded_datetime) IN (1, 7) THEN 1
             ELSE 0
         END as is_weekend,
 
-        HOUR(tpep_pickup_datetime) as hour_of_day
+        HOUR(rounded_datetime) as hour_of_day
 
-    FROM {input_table}
-    WHERE pickup_zip IS NOT NULL
-      AND dropoff_zip IS NOT NULL
-      AND fare_amount > 0
-      {date_filter}
-    GROUP BY
-        pickup_zip,
-        dropoff_zip,
-        date_trunc('hour', tpep_pickup_datetime),
-        date_format(tpep_pickup_datetime, 'yyyy-MM'),
-        CASE WHEN dayofweek(tpep_pickup_datetime) IN (1, 7) THEN 1 ELSE 0 END,
-        HOUR(tpep_pickup_datetime)
+    FROM hourly_aggregated
     """
 
     return sql

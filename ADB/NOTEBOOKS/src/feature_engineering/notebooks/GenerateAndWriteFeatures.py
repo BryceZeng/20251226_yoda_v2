@@ -41,7 +41,7 @@ DEFAULT_INPUT_PATH = "/databricks-datasets/nyctaxi-with-zipcodes/subsampled"
 DEFAULT_OUTPUT_TABLE = "pru.mlops.trip_simple_features"
 DEFAULT_TIMESTAMP_COLUMN = "rounded_datetime"
 DEFAULT_TRANSFORM_MODULE = "simple_features"
-DEFAULT_PRIMARY_KEYS = "zip"
+DEFAULT_PRIMARY_KEYS = "zip,dropoff_zip"
 
 # Required Parameters
 dbutils.widgets.text(
