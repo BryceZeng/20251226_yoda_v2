@@ -221,7 +221,7 @@ jobs:
           databricks bundle deploy -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --force-lock
 
       - name: Run Feature Engineering Job depend on deploy as code or deploy as model approach
-        if: inputs.DEPLOY_AS_MODEL == false
+        if: inputs.DEPLOY_AS_MODEL != 'true'
         env:
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
@@ -231,7 +231,7 @@ jobs:
           databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${FEATURE_ENGINEERING_JOB_NAME}
 
       - name: Run Training Job depend on deploy as code or deploy as model approach
-        if: inputs.DEPLOY_AS_MODEL == false
+        if: inputs.DEPLOY_AS_MODEL != 'true'
         env:
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
@@ -241,7 +241,7 @@ jobs:
           databricks bundle run -t ${DEPLOYMENT_ENVIRONMENT} ${TRAINING_JOB_NAME}
 
       - name: Run Promote Model Job if the env is Prod and Deploy as Model Apporach
-        if: inputs.DEPLOY_AS_MODEL == true && inputs.ENVIRONMENT == 'prod'
+        if: inputs.DEPLOY_AS_MODEL == 'true' && inputs.ENVIRONMENT == 'prod'
         env:
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
