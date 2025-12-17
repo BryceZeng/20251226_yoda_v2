@@ -285,5 +285,5 @@ delete_endpoint("my-model-api", token)
 
 ---
 
-**Visual Guide Version:** 1.0.0  
+**Visual Guide Version:** 1.0.0
 **Last Updated:** December 17, 2025

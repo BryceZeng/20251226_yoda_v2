@@ -116,7 +116,7 @@ At the end of your training script:
 # Register model
 import mlflow
 mlflow.set_registry_uri("databricks-uc")
-mlflow.sklearn.log_model(model, "model", 
+mlflow.sklearn.log_model(model, "model",
                         registered_model_name=f"{catalog}.{schema}.{model_name}")
 
 # Deploy immediately
@@ -143,7 +143,7 @@ tasks:
   - task_key: train_model
     notebook_task:
       notebook_path: ../src/training/TrainWithFeatureStore.py
-    
+
   - task_key: deploy_model
     depends_on:
       - task_key: train_model

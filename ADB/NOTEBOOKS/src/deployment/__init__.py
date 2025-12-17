@@ -12,7 +12,7 @@ Main Functions:
 
 Usage:
     from deployment import deploy_model_endpoint
-    
+
     result = deploy_model_endpoint(
         token=token,
         catalog="analytics_uc",
@@ -24,14 +24,13 @@ Usage:
 For detailed documentation, see deployment/README.md
 """
 
-from .deploy_endpoint import (
-    deploy_model_endpoint,
-    get_latest_model_version,
-    get_endpoint_status,
-    delete_endpoint,
+from .deploy_endpoint import (  # Backward compatibility
     ModelServingDeploymentError,
-    # Backward compatibility
-    deploy_model
+    delete_endpoint,
+    deploy_model,
+    deploy_model_endpoint,
+    get_endpoint_status,
+    get_latest_model_version,
 )
 
 __version__ = "1.0.0"

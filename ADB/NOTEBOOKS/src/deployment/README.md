@@ -112,18 +112,18 @@ DEPLOY_ENABLED = config.get("deploy_enabled", False)  # Set in lookup.yml
 
 if DEPLOY_ENABLED:
     print("🚀 Starting automatic model deployment...")
-    
+
     # Get token from secrets
     token = dbutils.secrets.get(
         scope=config.get("secret_scope", "ml-secrets"),
         key="databricks-token"
     )
-    
+
     # Parse model name to get catalog, schema, model
     model_parts = model_name.split(".")
     if len(model_parts) == 3:
         catalog, schema, model = model_parts
-        
+
         # Deploy the model
         try:
             result = deploy_model_endpoint(
@@ -140,14 +140,14 @@ if DEPLOY_ENABLED:
                     "project": project_name
                 }
             )
-            
+
             print(f"✅ Model deployed successfully!")
             print(f"📍 Endpoint: {result['endpoint_url']}")
-            
+
             # Export deployment info for workflow
             dbutils.jobs.taskValues.set("endpoint_url", result['endpoint_url'])
             dbutils.jobs.taskValues.set("deployed_version", result['model_version'])
-            
+
         except Exception as e:
             print(f"⚠️  Deployment failed (training still succeeded): {e}")
             print("You can deploy manually later using the deployment module")
