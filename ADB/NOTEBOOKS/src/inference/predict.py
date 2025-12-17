@@ -168,12 +168,14 @@ def predict_batch(
                 .option("header", True)
                 .option("inferSchema", True)
                 .load(input_table_name)
+                .limit(5000)  # Limit to 5000 records for faster processing
             )
         else:
             print("📊 Loading data from Delta table...")
-            base_df = spark_session.table(input_table_name)
+            base_df = spark_session.table(input_table_name).limit(5000)
 
         print(f"✅ Data loaded: {base_df.count()} rows, {len(base_df.columns)} columns")
+        print(f"⚠️  Note: Data limited to 5000 records")
         print(f"📋 Input columns: {base_df.columns}")
 
     except Exception as e:

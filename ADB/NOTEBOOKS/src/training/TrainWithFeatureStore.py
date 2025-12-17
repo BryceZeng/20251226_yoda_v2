@@ -215,9 +215,11 @@ raw_data = (
     .option("header", True)
     .option("inferSchema", True)
     .load(input_table_path)
+    .limit(5000)  # Limit to 5000 records for faster processing
 )
 
 print(f"Raw data shape: {raw_data.count()} rows, {len(raw_data.columns)} columns")
+print("⚠️  Note: Data limited to 5000 records")
 
 # Apply data preprocessing (customize intervals based on your feature engineering)
 taxi_data = pp.rounded_taxi_data(raw_data)

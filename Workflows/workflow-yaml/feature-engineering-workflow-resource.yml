@@ -17,7 +17,7 @@ common_permissions: &permissions
 resources:
   jobs:
     feature_engineering_workflow_job:
-      name: ${bundle.target}-pac_mlops-write-feature-table-job
+      name: ${bundle.target}-${var.PROJECT_NAME}-write-feature-table-job
       job_clusters:
         - job_cluster_key: write_feature_table_job_cluster
           <<: *new_cluster

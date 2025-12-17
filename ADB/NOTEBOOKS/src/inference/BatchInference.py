@@ -244,29 +244,64 @@ try:
         table_exists = False
 
     if table_exists:
-        print("📋 Table exists - appending with schema evolution...")
-        write_mode = "append"
+        print("📋 Table exists - performing MERGE to prevent duplicates...")
+
+        from delta.tables import DeltaTable
+
+        # Get the Delta table
+        delta_table = DeltaTable.forName(spark, output_table_name)
+
+        # Perform merge operation (upsert based on ID)
+        # - WHEN MATCHED: Update the existing record with new prediction
+        # - WHEN NOT MATCHED: Insert the new record
+        print(f"🔄 Merging predictions based on ID column to avoid duplicates...")
+        delta_table.alias("target").merge(
+            enriched_predictions.alias("source"), "target.id = source.id"
+        ).whenMatchedUpdate(
+            set={
+                "uuid": col("source.uuid"),
+                "model_name": col("source.model_name"),
+                "model_version": col("source.model_version"),
+                "prediction": col("source.prediction"),
+                "prediction_type": col("source.prediction_type"),
+                "project_name": col("source.project_name"),
+                "granularity": col("source.granularity"),
+                "timestamp": col("source.timestamp"),
+            }
+        ).whenNotMatchedInsertAll().execute()
+
+        print("✅ MERGE operation completed - no duplicate IDs created")
+
     else:
         print("🆕 Table doesn't exist - creating new table...")
-        write_mode = "overwrite"
-
-    # Write to table with detailed logging
-    print(
-        f"💾 Writing {enriched_predictions.count()} records in '{write_mode}' mode..."
-    )
-    enriched_predictions.write.format("delta").mode(write_mode).option(
-        "mergeSchema", "true"
-    ).option(
-        "overwriteSchema", "true" if write_mode == "overwrite" else "false"
-    ).saveAsTable(
-        output_table_name
-    )
-
-    print("✅ Predictions saved successfully")
+        print(
+            f"💾 Writing {enriched_predictions.count()} records in 'overwrite' mode..."
+        )
+        enriched_predictions.write.format("delta").mode("overwrite").option(
+            "mergeSchema", "true"
+        ).option("overwriteSchema", "true").saveAsTable(output_table_name)
+        print("✅ Predictions table created successfully")
 
     # Verify write by reading back
     result_count = spark.table(output_table_name).count()
     print(f"📊 Verification: Table now contains {result_count} total records")
+
+    # Check for duplicates
+    duplicate_check = spark.sql(
+        f"""
+        SELECT id, COUNT(*) as count
+        FROM {output_table_name}
+        GROUP BY id
+        HAVING COUNT(*) > 1
+    """
+    )
+
+    duplicate_count = duplicate_check.count()
+    if duplicate_count > 0:
+        print(f"⚠️  WARNING: Found {duplicate_count} duplicate IDs!")
+        duplicate_check.show(10)
+    else:
+        print(f"✅ No duplicate IDs found - data integrity confirmed")
 
 except Exception as e:
     error_msg = f"Failed to save predictions: {str(e)}"

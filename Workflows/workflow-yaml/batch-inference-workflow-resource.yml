@@ -17,7 +17,7 @@ common_permissions: &permissions
 resources:
   jobs:
     batch_inference_workflow_job:
-      name: ${bundle.target}-pac_mlops-batch-inference-job
+      name: ${bundle.target}-${var.PROJECT_NAME}-batch-inference-job
       tasks:
         - task_key: batch_inference_job
           existing_cluster_id: ${var.cluster_id}
