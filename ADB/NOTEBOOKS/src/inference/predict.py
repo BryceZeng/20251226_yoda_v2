@@ -174,11 +174,28 @@ def predict_batch(
             base_df = spark_session.table(input_table_name)
 
         print(f"✅ Data loaded: {base_df.count()} rows, {len(base_df.columns)} columns")
+        print(f"📋 Input columns: {base_df.columns}")
 
     except Exception as e:
         error_msg = f"Failed to load input data: {str(e)}"
         print(f"❌ {error_msg}")
         raise Exception(error_msg)
+    
+    # =============================================================================
+    # Data Preprocessing - Apply same transformations as training
+    # =============================================================================
+    print("🔄 Preprocessing data (adding rounded timestamps)...")
+    
+    try:
+        # Apply preprocessing to match training data format
+        base_df = preprocess_raw_data(base_df)
+        print(f"✅ Data preprocessed: {len(base_df.columns)} columns")
+        print(f"📋 Preprocessed columns: {base_df.columns}")
+    
+    except Exception as e:
+        print(f"⚠️  Preprocessing failed: {str(e)}")
+        print("   Proceeding with raw data - model may fail if schema doesn't match training")
+        # Continue with raw data
 
     # =============================================================================
     # Feature Enrichment with Optimized SQL
@@ -226,7 +243,19 @@ def predict_batch(
         # Load model from MLflow registry
         model = mlflow.pyfunc.load_model(model_uri)
         print(f"✅ Model loaded successfully")
+        
+        # Show model signature for debugging
+        try:
+            model_info = mlflow.models.get_model_info(model_uri)
+            if model_info.signature:
+                print(f"📋 Model expected inputs: {model_info.signature.inputs}")
+                print(f"📋 Model expected outputs: {model_info.signature.outputs}")
+        except Exception as sig_err:
+            print(f"⚠️  Could not retrieve model signature: {sig_err}")
 
+        # Show what columns we're providing
+        print(f"📊 Providing columns to model: {enriched_df.columns}")
+        
         # Execute batch prediction using MLflow's Spark UDF for optimal performance
         print("🔮 Executing batch predictions...")
         prediction_df = mlflow.pyfunc.spark_udf(spark_session, model_uri)(enriched_df)
@@ -236,6 +265,10 @@ def predict_batch(
     except Exception as e:
         error_msg = f"Model prediction failed: {str(e)}"
         print(f"❌ {error_msg}")
+        print(f"💡 Troubleshooting hints:")
+        print(f"   - Ensure input data has the same features used during training")
+        print(f"   - Check that preprocessing is applied correctly")
+        print(f"   - Available columns: {enriched_df.columns}")
         raise Exception(error_msg)
 
     # =============================================================================
