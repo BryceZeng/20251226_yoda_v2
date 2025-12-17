@@ -23,7 +23,7 @@ resources:
           existing_cluster_id: ${var.cluster_id}
           # <<: *new_cluster
           libraries:
-            - requirements: requirements.txt
+            - requirements: ADB/NOTEBOOKS/requirements.txt
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/inference/BatchInference.py
             base_parameters:
