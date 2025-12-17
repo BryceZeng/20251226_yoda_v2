@@ -4,7 +4,7 @@ on:
     branches:
       - master
       - develop
-      - feature/bryce_v4
+      - feature/bryce_v5
 
 jobs:
     call-master:
@@ -45,7 +45,7 @@ jobs:
 
     call-feature:
       if: github.ref == 'refs/heads/feature/bryce_v4'
-      uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
+      uses: ./.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: dev
         PROJECT_NAME: pacs-743-model-deployment-template
