@@ -39,7 +39,7 @@ Last Modified: December 2025
 # Default values for development and testing
 DEFAULT_INPUT_PATH = "/databricks-datasets/nyctaxi-with-zipcodes/subsampled"
 DEFAULT_OUTPUT_TABLE = "pru.mlops.trip_simple_features"
-DEFAULT_TIMESTAMP_COLUMN = "tpep_pickup_datetime"
+DEFAULT_TIMESTAMP_COLUMN = "rounded_datetime"
 DEFAULT_TRANSFORM_MODULE = "simple_features"
 DEFAULT_PRIMARY_KEYS = "zip"
 
