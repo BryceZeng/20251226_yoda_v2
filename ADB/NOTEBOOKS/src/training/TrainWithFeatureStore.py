@@ -5,6 +5,15 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install --upgrade typing_extensions>=4.7.0 "mlflow[databricks]>=3.1" catboost
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %pip install --upgrade typing_extensions>=4.7.0
+
+# COMMAND ----------
+
 # DBTITLE 1,Importing Python Libraries and Dependencies
 import os
 from datetime import datetime
@@ -14,7 +23,6 @@ import mlflow
 import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier, Pool
-from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 from mlflow.tracking import MlflowClient
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.model_selection import train_test_split
@@ -22,7 +30,13 @@ from sklearn.model_selection import train_test_split
 # COMMAND ----------
 
 # DBTITLE 1,Notebook environment configuration variables
-env = "dev"
+dbutils.widgets.text("SCHEMA", "prj_yoda", "Schema")
+dbutils.widgets.text("ENV", "dev", "Environment")
+dbutils.widgets.text("CATALOG", "ai_engineering", "Catalog")
+dbutils.widgets.text("TRAINING_DATA_PATH", "/path/to/data", "Training Data Path")
+dbutils.widgets.text("MODEL_NAME", "my_model", "Model Name")
+dbutils.widgets.text("EXPERIMENT_NAME", "my_experiment", "Experiment Name")
+
 schema = dbutils.widgets.get("SCHEMA")
 env = dbutils.widgets.get("ENV")
 catalog = dbutils.widgets.get("CATALOG")
@@ -38,6 +52,7 @@ if env == "prod":
 # COMMAND ----------
 
 # DBTITLE 1,Set MLflow experiment and registry URI
+experiment_name = "/Shared/pacs-743-nba_yoda_v2"
 mlflow.set_experiment(experiment_name)
 mlflow.set_registry_uri("databricks-uc")
 
@@ -109,8 +124,8 @@ data_df = raw_data.toPandas()
 
 # COMMAND ----------
 
-
 # DBTITLE 1,Feature Engineering
+
 def engineer_features(df):
     """Engineer features from raw data with null handling"""
     df = df.copy()
@@ -307,19 +322,37 @@ print(classification_report(y_test, y_pred))
 # COMMAND ----------
 
 # DBTITLE 1,Log model to MLflow
+# Set the registry URI to Unity Catalog (recommended)
+mlflow.set_registry_uri("databricks-uc")
+
+full_model_name = f"{catalog}.{schema}.{model_name}"
+from mlflow.models import infer_signature
+
+# Example: X_train is your training data, model is your trained CatBoost model
+signature = infer_signature(X_train, model.predict(X_train))
+input_example = X_train.iloc[[0]]  # or use a representative sample
+
 mlflow.catboost.log_model(
-    model, artifact_path="model", registered_model_name=model_name
+    model,
+    name="yoda_model",
+    registered_model_name=full_model_name,
+    signature=signature,
+    input_example=input_example
 )
 
 # COMMAND ----------
 
 # DBTITLE 1,Set model alias to Challenger
+model_name = f"{catalog}.{schema}.{model_name}"
+
 client = MlflowClient(registry_uri="databricks-uc")
 model_version = pp.get_latest_model_version(model_name)
 model_uri = f"models:/{model_name}/{model_version}"
 
 client.set_registered_model_alias(
-    name=model_name, version=model_version, alias="Challenger"
+    name=model_name,
+    version=model_version,
+    alias="Challenger"
 )
 
 # COMMAND ----------
