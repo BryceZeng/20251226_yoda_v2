@@ -16,12 +16,14 @@ common_permissions: &permissions
 
 resources:
   jobs:
-    batch_inference_job:
-      name: ${bundle.target}-pac_mlops-batch-inference-job_test
+    batch_inference_workflow_job:
+      name: ${bundle.target}-${var.PROJECT_NAME}-batch-inference-job
       tasks:
         - task_key: batch_inference_job
           existing_cluster_id: ${var.cluster_id}
           # <<: *new_cluster
+          libraries:
+            - requirements: ../../ADB/NOTEBOOKS/requirements.txt
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/inference/BatchInference.py
             base_parameters:
@@ -32,6 +34,7 @@ resources:
               ID_COL: ${var.ID_COL}
               PREDICTION_COL: ${var.PREDICTION_COL}
               PROJECT_NAME: ${var.PROJECT_NAME}
+              GRANULARITY: ${var.GRANULARITY}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
 
       schedule:
