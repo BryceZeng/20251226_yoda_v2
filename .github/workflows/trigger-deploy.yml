@@ -4,7 +4,7 @@ on:
     branches:
       - master
       - develop
-      - feature/bryce_v5
+      - feature/develop
 
 jobs:
     call-master:
@@ -37,7 +37,7 @@ jobs:
               GIT_TOKEN : ${{secrets.GIT_TOKEN}}
 
     call-feature:
-      if: github.ref == 'refs/heads/feature/bryce_v5'
+      if: github.ref == 'refs/heads/feature/develop'
       uses: ./.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: dev
