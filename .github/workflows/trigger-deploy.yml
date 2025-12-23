@@ -43,7 +43,7 @@ jobs:
         ENVIRONMENT: dev
         PROJECT_NAME: pacs-743-nba_yoda_v2
         FOLDER_NAME: /Workspace/Shared/pacs-743-nba_yoda_v2
-        RUNNER: dev-runner
+        RUNNER: prod-runner
         TRAINING_JOB_NAME: model_training_job
         PROMOTE_MODEL_JOB_NAME: promote_model_workflow_job
         FEATURE_ENGINEERING_JOB_NAME: feature_engineering_workflow_job
