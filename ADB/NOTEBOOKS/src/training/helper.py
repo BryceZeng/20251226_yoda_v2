@@ -255,7 +255,7 @@ def get_latest_model_version(model_name, registry_uri="databricks-uc"):
 
     Args:
         model_name (str): Full name of the model in format "catalog.schema.model_name"
-                         Example: "pru.pac_mlops.pac_mlops-model"
+                         Example: "ai_engineering.prj_yoda.yoda_model"
         registry_uri (str): MLflow registry URI (default: "databricks-uc" for Unity Catalog)
 
     Returns:
@@ -263,7 +263,7 @@ def get_latest_model_version(model_name, registry_uri="databricks-uc"):
 
     Example:
         # Get latest version for model promotion
-        latest_version = get_latest_model_version("pru.pac_mlops.taxi-fare-model")
+        latest_version = get_latest_model_version("ai_engineering.prj_yoda.yoda_model")
         model_uri = f"models:/{model_name}/{latest_version}"
     """
     latest_version = 1

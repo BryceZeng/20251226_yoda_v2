@@ -107,8 +107,8 @@ def generate_simple_features(
     Usage example:
         generate_simple_features(
             spark,
-            "pru.pac_mlops.raw_taxi_data",
-            "pru.pac_mlops.trip_simple_features",
+            "ai_engineering.prj_yoda.raw_taxi_data",
+            "ai_engineering.prj_yoda.trip_simple_features",
             start_date="2024-01-01",
             end_date="2024-02-01"
         )
@@ -136,8 +136,8 @@ def generate_simple_features(
 """
 generate_simple_features(
     spark,
-    "pru.pac_mlops.raw_taxi_data",
-    "pru.pac_mlops.trip_simple_features",
+    "ai_engineering.prj_yoda.raw_taxi_data",
+    "ai_engineering.prj_yoda.trip_simple_features",
     start_date="2024-01-01",
     end_date="2024-02-01"
 )
@@ -146,7 +146,7 @@ generate_simple_features(
 # Example 2: Just get features for a specific date
 """
 features_sql = create_simple_features_sql(
-    "pru.pac_mlops.raw_taxi_data",
+    "ai_engineering.prj_yoda.raw_taxi_data",
     start_date="2024-01-15"
 )
 features = spark.sql(features_sql)

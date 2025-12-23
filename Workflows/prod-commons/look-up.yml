@@ -22,11 +22,11 @@ variables:
 
    SCHEMA:
       description: "Database schema name for feature store and model artifacts"
-      default: pac_mlops
+      default: prj_yoda
 
    CATALOG:
       description: "Unity Catalog name for data and model storage (production)"
-      default: pru_prod
+      default: ai_engineering
 
    # =============================================================================
    # Data Path Configuration
@@ -34,7 +34,7 @@ variables:
 
    TRAINING_DATA_PATH:
       description: "Path to training data in Unity Catalog volumes (production)"
-      default: /Volumes/pru_prod/pac_mlops/test
+      default: /Volumes/ai_engineering/prj_yoda/test
 
    # =============================================================================
    # Model Configuration
@@ -42,15 +42,15 @@ variables:
 
    MODEL_NAME:
       description: "Source model name in MLflow model registry"
-      default: pru.pac_mlops.pac_mlops-model
+      default: ai_engineering.prj_yoda.yoda_model
 
    DEST_MODEL_NAME:
       description: "Destination model name for promotion workflow (production)"
-      default: pru_prod.pac_mlops.pac_mlops-model
+      default: ai_engineering_prod.prj_yoda.yoda_model
 
    EXPERIMENT_NAME:
       description: "MLflow experiment name for model tracking (production)"
-      default: /prod-pac_mlops-experiment
+      default: /prod-yoda_v2-experiment
 
    # =============================================================================
    # Feature Store Configuration (OPTIONAL)
@@ -58,16 +58,16 @@ variables:
 
    SIMPLE_FEATURES_TABLE:
       description: "Feature store table for simple trip features"
-      default: pru_prod.pac_mlops.trip_simple_features
+      default: ai_engineering.prj_yoda.trip_simple_features
 
    # PICKUP_FEATURES_TABLE and DROP_FEATURES_TABLE removed - using SIMPLE_FEATURES_TABLE instead
    # PICKUP_FEATURES_TABLE:
    #    description: "Feature store table for pickup location features"
-   #    default: pru_prod.pac_mlops.trip_pickup_features
+   #    default: ai_engineering.prj_yoda.trip_pickup_features
 
    # DROP_FEATURES_TABLE:
    #    description: "Feature store table for dropoff location features"
-   #    default: pru_prod.pac_mlops.trip_dropoff_features
+   #    default: ai_engineering.prj_yoda.trip_dropoff_features
 
    # =============================================================================
    # Inference Configuration
@@ -75,15 +75,15 @@ variables:
 
    INFERENCE_INPUT_TABLE:
       description: "Input table for batch inference pipeline (production)"
-      default: pru_prod.pac_mlops.feature_store_inference_input
+      default: ai_engineering.prj_yoda.feature_store_inference_input
 
    OUTPUT_PREDICTION_TABLE:
       description: "Output table for prediction results (production)"
-      default: pru_prod.pac_mlops.predictions
+      default: ai_engineering.feature_store.predictions
 
    GROUND_TRUTH_TABLE:
       description: "Ground truth table for model validation (production)"
-      default: pru_prod.pac_mlops.ground_truth
+      default: ai_engineering.feature_store.ground_truth
 
    # =============================================================================
    # Model Training Parameters
@@ -95,15 +95,15 @@ variables:
 
    ID_COL:
       description: "Primary key column name for predictions"
-      default: pickup_zip
+      default: party_id
 
    PREDICTION_COL:
-      description: "Target column name for model predictions"
-      default: fare_amount
+      description: "Target column name for model predictions (multiclass: 0=no purchase, 1-7=different product types)"
+      default: target
 
    GROUND_TRUTH_COL:
       description: "Ground truth column name for validation (same as PREDICTION_COL)"
-      default: fare_amount
+      default: target
 
    GRANULARITY:
       description: "Granularity level for predictions (e.g., party, claims, agent, policy)"
