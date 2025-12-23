@@ -87,11 +87,25 @@ jobs:
       ### end of software setup required
       - name: Authenticate with Databricks
         env:
-          DATABRICKS_HOST: ${{secrets.HOST}}
-          DATABRICKS_TOKEN: ${{secrets.TOKEN}}
+          DATABRICKS_HOST: ${{ secrets.HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          echo "${{secrets.HOST}}" | databricks configure --host "${{secrets.HOST}}"
-          echo "${{secrets.TOKEN}}" | databricks configure --token --host "${{secrets.HOST}}"
+          if [ -z "${DATABRICKS_HOST}" ]; then
+            echo "Error: DATABRICKS_HOST is not set or empty"
+            exit 1
+          fi
+          if [ -z "${DATABRICKS_TOKEN}" ]; then
+            echo "Error: DATABRICKS_TOKEN is not set or empty"
+            exit 1
+          fi
+          mkdir -p ~/.databricks
+          cat > ~/.databrickscfg << EOF
+[DEFAULT]
+host = ${DATABRICKS_HOST}
+token = ${DATABRICKS_TOKEN}
+EOF
+          echo "Databricks authentication configured"
+          databricks current-user me
       ### start of downloading template
       - name: Checkout shared repo
         uses: actions/checkout@v4
