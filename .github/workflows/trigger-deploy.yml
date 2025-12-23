@@ -12,8 +12,8 @@ jobs:
       uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
       with:
         ENVIRONMENT: prod
-        PROJECT_NAME: pacs-743-model-deployment-template
-        FOLDER_NAME: /Workspace/Projects/pacs-743-model-deployment-template
+        PROJECT_NAME: pacs-743-nba_yoda_v2
+        FOLDER_NAME: /Workspace/Projects/pacs-743-nba_yoda_v2
         RUNNER: prod-runner
         JOB_NAME: promote_model_workflow_job
       secrets:
@@ -26,8 +26,8 @@ jobs:
       uses: pru-pss/pss-eta-reusable_workflows/.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml@main
       with:
         ENVIRONMENT: dev
-        PROJECT_NAME: pacs-743-model-deployment-template
-        FOLDER_NAME: /Workspace/Projects/pacs-743-model-deployment-template
+        PROJECT_NAME: pacs-743-nba_yoda_v2
+        FOLDER_NAME: /Workspace/Projects/pacs-743-nba_yoda_v2
         RUNNER: dev-runner
         JOB_NAME: model_training_job
         UNIT_TEST_JOB_NAME: unit_test_job
@@ -41,8 +41,8 @@ jobs:
       uses: ./.github/workflows/pacs-datahub-ai-mlops-databricks-asset-bundle.yml
       with:
         ENVIRONMENT: dev
-        PROJECT_NAME: pacs-743-model-deployment-template
-        FOLDER_NAME: /Workspace/Shared/pacs-743-model-deployment-template
+        PROJECT_NAME: pacs-743-nba_yoda_v2
+        FOLDER_NAME: /Workspace/Shared/pacs-743-nba_yoda_v2
         RUNNER: dev-runner
         TRAINING_JOB_NAME: model_training_job
         PROMOTE_MODEL_JOB_NAME: promote_model_workflow_job
