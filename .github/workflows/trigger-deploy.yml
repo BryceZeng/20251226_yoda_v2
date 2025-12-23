@@ -51,6 +51,6 @@ jobs:
         UNIT_TEST_JOB_NAME: unit_test_job
         DEPLOY_AS_MODEL: 'false'
       secrets:
-              TOKEN: ${{ secrets.PERSONAL_DEV3_ACCESS_TOKEN }}
-              HOST : ${{secrets.DATABRICKS_DEV3_HOST}}
+              TOKEN: ${{ secrets.PERSONAL_APE_ACCESS_TOKEN }}
+              HOST : ${{secrets.DATABRICKS_APE_HOST}}
               GIT_TOKEN : ${{secrets.GIT_TOKEN}}
