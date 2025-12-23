@@ -32,9 +32,9 @@ variables:
    # Data Path Configuration
    # =============================================================================
 
-   # TRAINING_DATA_PATH:
-   #    description: "Path to training data in Unity Catalog volumes (production)"
-   #    default: /Volumes/ai_engineering/prj_yoda/test
+   TRAINING_DATA_PATH:
+      description: "Path to training data in Unity Catalog volumes"
+      default: /Volumes/ai_engineering/prj_yoda
 
    # =============================================================================
    # Model Configuration

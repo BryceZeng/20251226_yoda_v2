@@ -29,7 +29,7 @@ resources:
               SCHEMA: ${var.SCHEMA}
               ENV : ${bundle.target}
               CATALOG: ${var.CATALOG}
-              # TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
+              TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
               MODEL_NAME: ${var.MODEL_NAME}
               EXPERIMENT_NAME: ${var.EXPERIMENT_NAME}
               SIMPLE_FEATURES_TABLE: ${var.SIMPLE_FEATURES_TABLE}
