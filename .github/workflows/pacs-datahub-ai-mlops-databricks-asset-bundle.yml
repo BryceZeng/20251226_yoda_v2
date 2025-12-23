@@ -87,22 +87,10 @@ jobs:
       ### end of software setup required
       - name: Authenticate with Databricks
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
+          DATABRICKS_HOST: ${{secrets.HOST}}
+          DATABRICKS_TOKEN: ${{secrets.TOKEN}}
         run: |
-          if [ -z "${DATABRICKS_HOST}" ]; then
-            echo "Error: DATABRICKS_HOST is not set or empty"
-            exit 1
-          fi
-          if [ -z "${DATABRICKS_TOKEN}" ]; then
-            echo "Error: DATABRICKS_TOKEN is not set or empty"
-            exit 1
-          fi
-          mkdir -p ~/.databricks
-          echo "[DEFAULT]" > ~/.databrickscfg
-          echo "host = ${DATABRICKS_HOST}" >> ~/.databrickscfg
-          echo "token = ${DATABRICKS_TOKEN}" >> ~/.databrickscfg
-          echo "Databricks authentication configured successfully"
+          databricks configure --token
       ### start of downloading template
       - name: Checkout shared repo
         uses: actions/checkout@v4
@@ -144,8 +132,6 @@ jobs:
       - name: validate Databricks
         if: inputs.ENVIRONMENT == 'dev'
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
@@ -154,8 +140,6 @@ jobs:
       - name: summarize Databricks deployment
         if: inputs.ENVIRONMENT == 'dev'
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
@@ -164,8 +148,6 @@ jobs:
       - name: deploy Databricks
         if: inputs.ENVIRONMENT == 'dev'
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
@@ -174,8 +156,6 @@ jobs:
       - name: Run Unit Tests (Dev Environment - Must Pass Before Training)
         if: inputs.ENVIRONMENT == 'dev'
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
           UNIT_TEST_JOB_NAME: ${{ inputs.UNIT_TEST_JOB_NAME }}
@@ -217,8 +197,6 @@ jobs:
           ls -lrt
       - name: validate Databricks
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
@@ -226,8 +204,6 @@ jobs:
           databricks bundle validate -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --output json
       - name: summarize Databricks deployment
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
@@ -235,8 +211,6 @@ jobs:
           databricks bundle summary -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}"
       - name: deploy Databricks
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
         run: |
@@ -246,8 +220,6 @@ jobs:
       - name: Run Feature Engineering Job depend on deploy as code or deploy as model approach
         if: inputs.DEPLOY_AS_MODEL != 'true'
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
           FEATURE_ENGINEERING_JOB_NAME: ${{ inputs.FEATURE_ENGINEERING_JOB_NAME }}
@@ -258,8 +230,6 @@ jobs:
       - name: Run Training Job depend on deploy as code or deploy as model approach
         if: inputs.DEPLOY_AS_MODEL != 'true'
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
           TRAINING_JOB_NAME: ${{ inputs.TRAINING_JOB_NAME }}
@@ -270,8 +240,6 @@ jobs:
       - name: Run Promote Model Job if the env is Prod and Deploy as Model Apporach
         if: inputs.DEPLOY_AS_MODEL == 'true' && inputs.ENVIRONMENT == 'prod'
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
           PROMOTE_MODEL_JOB_NAME: ${{ inputs.PROMOTE_MODEL_JOB_NAME }}
@@ -281,8 +249,6 @@ jobs:
 
       - name: Run Batch Inference Job
         env:
-          DATABRICKS_HOST: ${{ secrets.HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.TOKEN }}
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
           BATCH_INFERENCE_JOB_NAME: ${{ inputs.BATCH_INFERENCE_JOB_NAME }}
