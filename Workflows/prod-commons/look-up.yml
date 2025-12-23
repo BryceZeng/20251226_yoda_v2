@@ -91,7 +91,7 @@ variables:
 
    PROJECT_NAME:
       description: "Project identifier for tracking and organization"
-      default: customer_churn_lightgbm
+      default: yoda_v2
 
    ID_COL:
       description: "Primary key column name for predictions"
