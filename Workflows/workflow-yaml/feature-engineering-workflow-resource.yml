@@ -22,37 +22,18 @@ resources:
         - job_cluster_key: write_feature_table_job_cluster
           <<: *new_cluster
       tasks:
-        - task_key: SimpleFeatures
-          # job_cluster_key: write_feature_table_job_cluster
-          existing_cluster_id: ${var.cluster_id}
-          notebook_task:
-            notebook_path: ../../ADB/NOTEBOOKS/src/feature_engineering/notebooks/GenerateAndWriteFeatures.ipynb
-            base_parameters:
-              # TODO modify these arguments to reflect your setup.
-              input_table_path: ${var.TRAINING_DATA_PATH}
-              # TODO: Empty start/end dates will process the whole range. Update this as needed to process recent data.
-              input_start_date: ""
-              input_end_date: ""
-              timestamp_column: rounded_datetime
-              output_table_name: ${var.SIMPLE_FEATURES_TABLE}
-              features_transform_module: simple_features
-              primary_keys: zip,dropoff_zip
-              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
-              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: GroundTruth
-          depends_on:
-              - task_key: SimpleFeatures
           # job_cluster_key: write_feature_table_job_cluster
           existing_cluster_id: ${var.cluster_id}
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/feature_engineering/notebooks/CreateGroundTruth.ipynb
             base_parameters:
-              input_table_path: ${var.TRAINING_DATA_PATH}
-              ID_COL: ${var.ID_COL}
-              GROUND_TRUTH_COL: ${var.GROUND_TRUTH_COL}
+              CATALOG: ${var.CATALOG}
+              SCHEMA: ${var.SCHEMA}
+              START_DATE: "2023-10-01"
+              END_DATE: "2025-06-01"
               GROUND_TRUTH_TABLE: ${var.GROUND_TRUTH_TABLE}
               PROJECT_NAME: ${var.PROJECT_NAME}
-              JOB_FREQUENCY: ${var.JOB_FREQUENCY}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
