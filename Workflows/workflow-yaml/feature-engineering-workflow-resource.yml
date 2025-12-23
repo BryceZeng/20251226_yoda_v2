@@ -23,8 +23,7 @@ resources:
           <<: *new_cluster
       tasks:
         - task_key: GroundTruth
-          # job_cluster_key: write_feature_table_job_cluster
-          existing_cluster_id: ${var.cluster_id}
+          job_cluster_key: write_feature_table_job_cluster
           notebook_task:
             notebook_path: ../../ADB/NOTEBOOKS/src/feature_engineering/notebooks/CreateGroundTruth.ipynb
             base_parameters:

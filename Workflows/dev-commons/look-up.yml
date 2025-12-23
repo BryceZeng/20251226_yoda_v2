@@ -112,10 +112,8 @@ variables:
    # =============================================================================
    # Compute Configuration
    # =============================================================================
-
-   cluster_id:
-      description: "Databricks cluster ID for job execution"
-      default: 0917-015226-4kipf3hu
+   # Note: Jobs now use ephemeral job clusters defined in workflow YAML files
+   # instead of existing interactive clusters for better reliability and cost efficiency
 
    # =============================================================================
    # Scheduling Configuration

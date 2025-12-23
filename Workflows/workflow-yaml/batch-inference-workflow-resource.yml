@@ -18,10 +18,12 @@ resources:
   jobs:
     batch_inference_workflow_job:
       name: ${bundle.target}-${var.PROJECT_NAME}-batch-inference-job
+      job_clusters:
+        - job_cluster_key: batch_inference_cluster
+          <<: *new_cluster
       tasks:
         - task_key: batch_inference_job
-          existing_cluster_id: ${var.cluster_id}
-          # <<: *new_cluster
+          job_cluster_key: batch_inference_cluster
           libraries:
             - requirements: ../../ADB/NOTEBOOKS/requirements.txt
           notebook_task:

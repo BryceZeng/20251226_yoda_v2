@@ -26,6 +26,8 @@ targets:
     permissions:
       - user_name: ${workspace.current_user.userName}
         level: CAN_MANAGE
+      - group_name: users
+        level: CAN_MANAGE
     # run_as:
     #   user_name: ${workspace.current_user.userName}
   uat:
@@ -39,6 +41,8 @@ targets:
       file_path: ${var.folder_name}
     permissions:
       - user_name: ${workspace.current_user.userName}
+        level: CAN_MANAGE
+      - group_name: users
         level: CAN_MANAGE
     # run_as:
     #   user_name: ${workspace.current_user.userName}
@@ -54,5 +58,6 @@ targets:
     permissions:
       - user_name: ${workspace.current_user.userName}
         level: CAN_MANAGE
-    # run_as:
+      - group_name: users
+        level: CAN_MANAGE
     #   user_name: ${workspace.current_user.userName}
