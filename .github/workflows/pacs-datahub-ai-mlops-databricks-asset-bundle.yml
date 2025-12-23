@@ -36,13 +36,12 @@ on:
         required: false
         default: false
     secrets:
-       HOST:
+      HOST:
         required: true
-       TOKEN:
+      TOKEN:
         required: true
-       GIT_TOKEN:
+      GIT_TOKEN:
         required: true
-
 
 jobs:
   set-runner:
@@ -65,41 +64,41 @@ jobs:
       - name: Print runner
         run: echo "Running on ${{ runner.os }}"
 
+      # runs-on: pru-pacs-all-prod-linux-runner-01 #pru-pacs-all-nprd-linux-runner-01  # udp-win-nprd # Specify the label of your existing runners
 
-    # runs-on: pru-pacs-all-prod-linux-runner-01 #pru-pacs-all-nprd-linux-runner-01  # udp-win-nprd # Specify the label of your existing runners
-
-    # steps:
+      # steps:
       - name: Validate the parameters
         run: |
           echo ${{github.ref}}
       - name: Checkout repository
         uses: actions/checkout@v2
 
-    ### start of software setup required
+      ### start of software setup required
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Deploy Databricks Asset Bundle
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
           databricks -v
-    ### end of software setup required
+      ### end of software setup required
       - name: Authenticate with Databricks
         env:
           DATABRICKS_HOST: ${{secrets.HOST}}
           DATABRICKS_TOKEN: ${{secrets.TOKEN}}
         run: |
-          databricks configure --token
-    ### start of downloading template
+          echo "${{secrets.HOST}}" | databricks configure --host "${{secrets.HOST}}"
+          echo "${{secrets.TOKEN}}" | databricks configure --token --host "${{secrets.HOST}}"
+      ### start of downloading template
       - name: Checkout shared repo
         uses: actions/checkout@v4
         with:
           repository: pru-pss/pss-eta-reusable_workflows
           ref: main
-          token:  ${{ secrets.GIT_TOKEN }}
+          token: ${{ secrets.GIT_TOKEN }}
           path: shared
 
       - name: listing the databriks template file
@@ -107,25 +106,24 @@ jobs:
           ls -lrt shared/
           cp -f shared/actions/pacs/datahub-ai/databricks.yml ./databricks.yml
           cat ./databricks.yml
-    ### end of downloading template
-
+      ### end of downloading template
       - name: Setting up the deployment space for unit testing
         if: inputs.ENVIRONMENT == 'dev'
         env:
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
         run: |
-            echo '----------Listing the template file-------------------'
-            ls -lrt
-            echo '----------End Of Listing the template file-------------------'
-            cat ./databricks.yml
-            sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}/" databricks.yml
-            sed -i "s/Workflows\/commons.*/Workflows\/${DEPLOYMENT_ENVIRONMENT}\-commons\/\*\.yml/" databricks.yml
-            sed -i "s|Workflows/workflow-yaml.*|Workflows/test/*yml|" databricks.yml
-            cat   databricks.yml
-            cp -f ./databricks.yml ./ADB/NOTEBOOKS/.
-            echo '----------Display the final template file-------------------'
-            cat ./ADB/NOTEBOOKS/databricks.yml
-            echo '----------End Of Display the final template file-------------------'
+          echo '----------Listing the template file-------------------'
+          ls -lrt
+          echo '----------End Of Listing the template file-------------------'
+          cat ./databricks.yml
+          sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}/" databricks.yml
+          sed -i "s/Workflows\/commons.*/Workflows\/${DEPLOYMENT_ENVIRONMENT}\-commons\/\*\.yml/" databricks.yml
+          sed -i "s|Workflows/workflow-yaml.*|Workflows/test/*yml|" databricks.yml
+          cat   databricks.yml
+          cp -f ./databricks.yml ./ADB/NOTEBOOKS/.
+          echo '----------Display the final template file-------------------'
+          cat ./ADB/NOTEBOOKS/databricks.yml
+          echo '----------End Of Display the final template file-------------------'
 
       - name: switch directory
         if: inputs.ENVIRONMENT == 'dev'
@@ -182,17 +180,17 @@ jobs:
         env:
           DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
         run: |
-            echo '----------Listing the template file-------------------'
-            ls -lrt
-            echo '----------End Of Listing the template file-------------------'
-            cat ./databricks.yml
-            sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}/" databricks.yml
-            sed -i "s/Workflows\/commons.*/Workflows\/${DEPLOYMENT_ENVIRONMENT}\-commons\/\*\.yml/" databricks.yml
-            cat   databricks.yml
-            cp -f ./databricks.yml ./ADB/NOTEBOOKS/.
-            echo '----------Display the final template file-------------------'
-            cat ./ADB/NOTEBOOKS/databricks.yml
-            echo '----------End Of Display the final template file-------------------'
+          echo '----------Listing the template file-------------------'
+          ls -lrt
+          echo '----------End Of Listing the template file-------------------'
+          cat ./databricks.yml
+          sed -i "s/ name: .*/name: ${{ inputs.PROJECT_NAME }}/" databricks.yml
+          sed -i "s/Workflows\/commons.*/Workflows\/${DEPLOYMENT_ENVIRONMENT}\-commons\/\*\.yml/" databricks.yml
+          cat   databricks.yml
+          cp -f ./databricks.yml ./ADB/NOTEBOOKS/.
+          echo '----------Display the final template file-------------------'
+          cat ./ADB/NOTEBOOKS/databricks.yml
+          echo '----------End Of Display the final template file-------------------'
 
       - name: switch directory
         run: |
