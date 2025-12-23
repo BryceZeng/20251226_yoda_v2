@@ -99,11 +99,9 @@ jobs:
             exit 1
           fi
           mkdir -p ~/.databricks
-          cat > ~/.databrickscfg << EOF
-[DEFAULT]
-host = ${DATABRICKS_HOST}
-token = ${DATABRICKS_TOKEN}
-EOF
+          echo "[DEFAULT]" > ~/.databrickscfg
+          echo "host = ${DATABRICKS_HOST}" >> ~/.databrickscfg
+          echo "token = ${DATABRICKS_TOKEN}" >> ~/.databrickscfg
           echo "Databricks authentication configured"
           databricks current-user me
       ### start of downloading template
