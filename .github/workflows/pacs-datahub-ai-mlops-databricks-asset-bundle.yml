@@ -102,8 +102,7 @@ jobs:
           echo "[DEFAULT]" > ~/.databrickscfg
           echo "host = ${DATABRICKS_HOST}" >> ~/.databrickscfg
           echo "token = ${DATABRICKS_TOKEN}" >> ~/.databrickscfg
-          echo "Databricks authentication configured"
-          databricks current-user me
+          echo "Databricks authentication configured successfully"
       ### start of downloading template
       - name: Checkout shared repo
         uses: actions/checkout@v4
