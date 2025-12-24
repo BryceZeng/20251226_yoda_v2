@@ -4,3 +4,4 @@ numpy>=1.18.0
 lightgbm
 mlflow
 scikit-learn
+protobuf<4.0.0
