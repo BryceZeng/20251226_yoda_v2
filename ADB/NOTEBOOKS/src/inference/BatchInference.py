@@ -54,7 +54,9 @@ try:
 
     # Model Configuration
     env = dbutils.widgets.get("ENV")
-    model_name = dbutils.widgets.get("MODEL_NAME")
+    model_name_base = dbutils.widgets.get("MODEL_NAME")
+    # Construct 3-level Unity Catalog model name: catalog.schema.model
+    model_name = f"ai_engineering.prj_yoda.{model_name_base}"
     alias = "champion"  # Always use champion model for inference
     model_uri = f"models:/{model_name}@{alias}"
 
@@ -68,6 +70,7 @@ try:
     print(f"   Input Table: {input_table_name}")
     print(f"   Output Table: {output_table_name}")
     print(f"   Model: {model_uri}")
+    print(f"   Model Name (3-level): {model_name}")
     print(f"   Environment: {env}")
 
 except Exception as e:
