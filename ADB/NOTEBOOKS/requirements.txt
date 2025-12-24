@@ -5,3 +5,4 @@ lightgbm
 mlflow
 scikit-learn
 protobuf<4.0.0
+python-dateutil

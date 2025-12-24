@@ -16,9 +16,9 @@ variables:
    # Core Configuration Parameters
    # =============================================================================
 
-   TASK_KEY:
-      description: "Default task key identifier for workflow tasks"
-      default: DEFAULT
+   # TASK_KEY:
+   #    description: "Default task key identifier for workflow tasks"
+   #    default: DEFAULT
 
    SCHEMA:
       description: "Database schema name for feature store and model artifacts"
@@ -32,9 +32,9 @@ variables:
    # Data Path Configuration
    # =============================================================================
 
-   TRAINING_DATA_PATH:
-      description: "Path to training data in Unity Catalog volumes"
-      default: /Volumes/ai_engineering/prj_yoda
+   # TRAINING_DATA_PATH:
+   #    description: "Path to training data in Unity Catalog volumes"
+   #    default: /Volumes/ai_engineering/prj_yoda
 
    # =============================================================================
    # Model Configuration
@@ -56,9 +56,9 @@ variables:
    # Feature Store Configuration
    # =============================================================================
 
-   SIMPLE_FEATURES_TABLE:
-      description: "Feature store table for simple trip features"
-      default: ai_engineering_uat.prj_yoda.trip_simple_features
+   # SIMPLE_FEATURES_TABLE:
+   #    description: "Feature store table for simple trip features"
+   #    default: ai_engineering_uat.prj_yoda.trip_simple_features
 
    # PICKUP_FEATURES_TABLE and DROP_FEATURES_TABLE removed - using SIMPLE_FEATURES_TABLE instead
    # PICKUP_FEATURES_TABLE:
@@ -77,13 +77,13 @@ variables:
       description: "Input table for batch inference pipeline (UAT)"
       default: ai_engineering.prj_yoda.feature_store_inference_input
 
-   OUTPUT_PREDICTION_TABLE:
-      description: "Output table for prediction results (UAT)"
-      default: ai_engineering.feature_store.predictions
+   # OUTPUT_PREDICTION_TABLE:
+   #    description: "Output table for prediction results (UAT)"
+   #    default: ai_engineering.feature_store.predictions
 
-   GROUND_TRUTH_TABLE:
-      description: "Ground truth table for model validation (UAT)"
-      default: ai_engineering.feature_store.ground_truth
+   # GROUND_TRUTH_TABLE:
+   #    description: "Ground truth table for model validation (UAT)"
+   #    default: ai_engineering.feature_store.ground_truth
 
    # =============================================================================
    # Model Training Parameters
@@ -101,9 +101,9 @@ variables:
       description: "Target column name for model predictions (multiclass: 0=no purchase, 1-7=different product types)"
       default: target
 
-   GROUND_TRUTH_COL:
-      description: "Ground truth column name for validation (same as PREDICTION_COL)"
-      default: target
+   # GROUND_TRUTH_COL:
+   #    description: "Ground truth column name for validation (same as PREDICTION_COL)"
+   #    default: target
 
    GRANULARITY:
       description: "Granularity level for predictions (e.g., party, claims, agent, policy)"
@@ -113,21 +113,21 @@ variables:
    # Compute Configuration
    # =============================================================================
 
-   cluster_id:
-      description: "Databricks cluster ID for job execution (UAT)"
-      default: 0917-015226-4kipf3hu
+   # cluster_id:
+   #    description: "Databricks cluster ID for job execution (UAT)"
+   #    default: 0917-015226-4kipf3hu
 
    # =============================================================================
    # Scheduling Configuration
    # =============================================================================
 
-   FE_JOB_FREQUENCY:
-      description: "Feature engineering job execution frequency"
-      default: weekly
+   # FE_JOB_FREQUENCY:
+   #    description: "Feature engineering job execution frequency"
+   #    default: weekly
 
-   JOB_FREQUENCY:
-      description: "General job execution frequency (alias for FE_JOB_FREQUENCY)"
-      default: weekly
+   # JOB_FREQUENCY:
+   #    description: "General job execution frequency (alias for FE_JOB_FREQUENCY)"
+   #    default: weekly
 
    # =============================================================================
    # Git Integration Configuration
@@ -157,24 +157,24 @@ variables:
    # Databricks Workspace Resources (UAT)
    # =============================================================================
 
-   WAREHOUSE_ID:
-      description: "Resolve warehouse ID from warehouse name (UAT)"
-      lookup:
-        warehouse: "Test-Compute"
+   # WAREHOUSE_ID:
+   #    description: "Resolve warehouse ID from warehouse name (UAT)"
+   #    lookup:
+   #      warehouse: "Test-Compute"
 
    # =============================================================================
    # Standard Workflow Tags (UAT)
    # =============================================================================
 
-   WORKFLOW_STANDARD_TAGS:
-      description: "Standard tags used for Feature Store workflow (UAT)"
-      type: complex
-      default:
-        department: AI
-        environment: ${var.ENVIRONMENT}
-        last_update: n/a
-        project: ${var.PROJECT_NAME}
-        scope: UAT_TESTING
+   # WORKFLOW_STANDARD_TAGS:
+   #    description: "Standard tags used for Feature Store workflow (UAT)"
+   #    type: complex
+   #    default:
+   #      department: AI
+   #      environment: ${var.ENVIRONMENT}
+   #      last_update: n/a
+   #      project: ${var.PROJECT_NAME}
+   #      scope: UAT_TESTING
 
    # =============================================================================
    # Advanced Configuration (Available for UAT Use)

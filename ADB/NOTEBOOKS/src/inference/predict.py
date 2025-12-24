@@ -11,12 +11,13 @@
 # =============================================================================
 
 import math
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import mlflow
 import pandas as pd
 import pyspark.sql.functions as F
+from dateutil.relativedelta import relativedelta
 from pyspark.sql.functions import lit, struct, to_timestamp
 from pyspark.sql.types import IntegerType
 
@@ -110,7 +111,8 @@ def predict_batch(
     Executes batch prediction on input data with feature engineering.
 
     This function loads data from the input table and applies feature engineering
-    transformations before generating predictions.
+    transformations before generating predictions. It intelligently determines the
+    date range to process based on existing predictions.
 
     Args:
         spark_session: Active Spark session for data processing
@@ -132,18 +134,84 @@ def predict_batch(
     mlflow.set_registry_uri("databricks-uc")
 
     # =============================================================================
-    # Data Loading - Read from input table
+    # Check Last Prediction Date from predictions table
+    # =============================================================================
+    predictions_table = "ai_engineering.feature_store.predictions"
+    print(f"🔍 Checking last prediction date from {predictions_table}...")
+
+    try:
+        # Check if predictions table exists
+        table_exists = spark_session.catalog.tableExists(predictions_table)
+
+        if table_exists:
+            # Get the last prediction date from the table
+            last_prediction_query = f"""
+                SELECT MAX(DATE(timestamp)) as last_prediction_date
+                FROM {predictions_table}
+            """
+            last_prediction_result = spark_session.sql(last_prediction_query).collect()
+            last_prediction_date = last_prediction_result[0]["last_prediction_date"]
+
+            if last_prediction_date:
+                print(f"✅ Found last prediction date: {last_prediction_date}")
+                # Calculate the next date to start predictions from (add 3 months)
+                last_date = datetime.strptime(str(last_prediction_date), "%Y-%m-%d")
+                start_date = last_date + relativedelta(months=3)
+                start_date_str = start_date.strftime("%Y-%m-%d")
+                print(
+                    f"📅 Starting predictions from: {start_date_str} (3 months after last prediction)"
+                )
+                has_existing_predictions = True
+            else:
+                print(
+                    "⚠️  Predictions table exists but is empty - will create from scratch"
+                )
+                start_date_str = None
+                has_existing_predictions = False
+        else:
+            print("⚠️  Predictions table does not exist - will create from scratch")
+            start_date_str = None
+            has_existing_predictions = False
+
+    except Exception as e:
+        print(f"⚠️  Could not check predictions table: {str(e)}")
+        print("   Will process all available data")
+        start_date_str = None
+        has_existing_predictions = False
+
+    # =============================================================================
+    # Data Loading - Read from input table with date filtering
     # =============================================================================
     print(f"📊 Loading data from input table: {input_table_name}...")
 
     try:
-        base_df = spark_session.table(input_table_name)
+        # Build query based on whether we have existing predictions
+        # This follows the same pattern as TrainWithFeatureStore.py which uses b_snapshot_month
+        if has_existing_predictions and start_date_str:
+            # Only get data from the start_date onwards
+            today = datetime.now().strftime("%Y-%m-%d")
+
+            query = f"""
+                SELECT * FROM {input_table_name}
+                WHERE snapshot_date >= '{start_date_str}'
+                  AND snapshot_date <= '{today}'
+            """
+            print(f"📆 Filtering data from {start_date_str} to {today}")
+        else:
+            # Get all available data if no existing predictions
+            query = f"SELECT * FROM {input_table_name}"
+            print(f"📆 Processing all available data (no existing predictions)")
+
+        base_df = spark_session.sql(query)
         row_count = base_df.count()
         col_count = len(base_df.columns)
         print(f"✅ Data loaded: {row_count} rows, {col_count} columns")
 
         if row_count == 0:
-            print(f"⚠️  WARNING: Input table '{input_table_name}' is empty!")
+            print(f"⚠️  WARNING: No new data to process!")
+            print(
+                f"   Either input table '{input_table_name}' is empty or all data has been processed"
+            )
             return spark_session.createDataFrame([], base_df.schema)
 
     except Exception as e:
