@@ -41,12 +41,12 @@ variables:
    # =============================================================================
 
    MODEL_NAME:
-      description: "Source model name in MLflow model registry"
-      default: ai_engineering.prj_yoda.yoda_model
+      description: "Model name (without catalog/schema prefix) for MLflow model registry"
+      default: yoda_model
 
    DEST_MODEL_NAME:
-      description: "Destination model name for promotion workflow (UAT)"
-      default: ai_engineering_uat.prj_yoda.yoda_model
+      description: "Destination model name (without catalog/schema prefix) for promotion workflow (UAT)"
+      default: yoda_model
 
    EXPERIMENT_NAME:
       description: "MLflow experiment name for model tracking (UAT)"
