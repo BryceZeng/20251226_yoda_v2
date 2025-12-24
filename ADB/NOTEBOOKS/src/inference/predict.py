@@ -101,27 +101,21 @@ def engineer_features(df):
 def predict_batch(
     spark_session,
     model_uri: str,
-    catalog: str,
-    schema: str,
-    start_date: str,
-    end_date: str,
+    input_table_name: str,
     model_version: str,
     ts: str,
     granularity: str = "party",
 ):
     """
-    Executes batch prediction using the same data loading and feature engineering as training.
+    Executes batch prediction on input data with feature engineering.
 
-    This function loads data using the SQL query from TrainWithFeatureStore.py and applies
-    the same feature engineering transformations to ensure consistency.
+    This function loads data from the input table and applies feature engineering
+    transformations before generating predictions.
 
     Args:
         spark_session: Active Spark session for data processing
         model_uri: MLflow model URI (e.g., "models:/model_name@alias")
-        catalog: Databricks catalog name
-        schema: Databricks schema name
-        start_date: Start date for data filtering (YYYY-MM-DD)
-        end_date: End date for data filtering (YYYY-MM-DD)
+        input_table_name: Full table name to read input data from (catalog.schema.table)
         model_version: Version identifier of the model being used
         ts: Timestamp string for prediction metadata
         granularity: Granularity level for predictions (e.g., party, claims, agent)
@@ -138,75 +132,22 @@ def predict_batch(
     mlflow.set_registry_uri("databricks-uc")
 
     # =============================================================================
-    # Data Loading - Use same SQL query as training
+    # Data Loading - Read from input table
     # =============================================================================
-    print(f"📊 Loading data from {catalog}.{schema}...")
-
-    query = f"""
-    WITH
-    daterange AS (
-      SELECT
-        MIN(snapshot_date) as snapshot_date,
-        QUARTER(snapshot_date) as trans_quarter,
-        YEAR(snapshot_date) as trans_year
-      FROM {catalog}.{schema}.customer_prumdm_daily_table
-      WHERE snapshot_date BETWEEN '{start_date}' AND '{end_date}'
-      GROUP BY QUARTER(snapshot_date), YEAR(snapshot_date)
-      ORDER BY snapshot_date
-    ),
-    policy_filter AS (
-      SELECT DISTINCT party_id
-      FROM sdm.prumdm_enc.policy
-      WHERE party_id LIKE 'LA%'
-        AND (status = 'In Force' OR status = 'Paid Up Contract')
-    ),
-    table_a AS (
-      SELECT
-        a.*,
-        DATE_FORMAT(ADD_MONTHS(a.snapshot_date, 3), 'yyyy-MM') as a_join_month
-      FROM {catalog}.{schema}.customer_prumdm_daily_table a
-      INNER JOIN daterange d ON a.snapshot_date = d.snapshot_date
-      INNER JOIN policy_filter p ON a.party_id = p.party_id
-      WHERE a.party_id LIKE 'LA%'
-    ),
-    table_b AS (
-      SELECT
-        b.party_id,
-        b.ci_purchase_ind,
-        b.medical_purchase_ind,
-        b.protection_purchase_ind,
-        b.savings_purchase_ind,
-        b.investment_purchase_ind,
-        b.retirement_purchase_ind,
-        b.legacy_planning_purchase_ind,
-        DATE_FORMAT(b.snapshot_date, 'yyyy-MM') as b_snapshot_month
-      FROM {catalog}.{schema}.customer_target_yoda_daily_table b
-      INNER JOIN policy_filter p ON b.party_id = p.party_id
-      WHERE b.party_id LIKE 'LA%'
-    )
-    SELECT
-      a.party_id,
-      a.snapshot_date,
-      DATE_FORMAT(a.snapshot_date, 'yyyy-MM') as trans_yyyymm,
-      b.ci_purchase_ind,
-      b.medical_purchase_ind,
-      b.protection_purchase_ind,
-      b.savings_purchase_ind,
-      b.investment_purchase_ind,
-      b.retirement_purchase_ind,
-      b.legacy_planning_purchase_ind,
-      a.*
-    FROM table_a a
-    INNER JOIN table_b b
-      ON a.party_id = b.party_id
-      AND a.a_join_month = b.b_snapshot_month
-    """
+    print(f"📊 Loading data from input table: {input_table_name}...")
 
     try:
-        base_df = spark_session.sql(query)
-        print(f"✅ Data loaded: {base_df.count()} rows, {len(base_df.columns)} columns")
+        base_df = spark_session.table(input_table_name)
+        row_count = base_df.count()
+        col_count = len(base_df.columns)
+        print(f"✅ Data loaded: {row_count} rows, {col_count} columns")
+
+        if row_count == 0:
+            print(f"⚠️  WARNING: Input table '{input_table_name}' is empty!")
+            return spark_session.createDataFrame([], base_df.schema)
+
     except Exception as e:
-        error_msg = f"Failed to load data: {str(e)}"
+        error_msg = f"Failed to load data from '{input_table_name}': {str(e)}"
         print(f"❌ {error_msg}")
         raise Exception(error_msg)
 

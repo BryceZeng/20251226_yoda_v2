@@ -50,7 +50,11 @@ print("📦 All libraries imported successfully")
 try:
     # Input/Output Configuration
     input_table_name = dbutils.widgets.get("INFERENCE_INPUT_TABLE")
-    output_table_name = dbutils.widgets.get("OUTPUT_PREDICTION_TABLE")
+    
+    # HARDCODED OUTPUT TABLE: All predictions from ALL projects write to a common location
+    # This enables cross-project analytics and centralized monitoring in feature_store schema
+    # Format: ai_engineering.feature_store.predictions (NOT project-specific)
+    output_table_name = "ai_engineering.feature_store.predictions"
 
     # Model Configuration
     env = dbutils.widgets.get("ENV")
@@ -234,6 +238,10 @@ try:
             print(f"✅ Catalog and schema verified: {catalog_name}.{schema_name}")
         except Exception as e:
             print(f"⚠️  Catalog/schema creation warning: {str(e)}")
+    else:
+        error_msg = f"Invalid table name format: '{output_table_name}'. Expected format: catalog.schema.table"
+        print(f"❌ {error_msg}")
+        dbutils.notebook.exit(error_msg)
 
     # Display sample of data to be written
     print("📋 Sample of enriched predictions:")
@@ -318,12 +326,12 @@ print("=" * 60)
 print("🎉 BATCH INFERENCE COMPLETED SUCCESSFULLY!")
 print("=" * 60)
 print(f"📊 SUMMARY:")
-print(f"   Data Source: {catalog}.{schema}")
-print(f"   Date Range: {start_date} to {end_date}")
+print(f"   Input Table: {input_table_name}")
 print(f"   Output Table: {output_table_name}")
 print(f"   Model: {model_name} (v{model_version})")
 print(f"   Batch UUID: {batch_uuid}")
 print(f"   Environment: {env}")
+print(f"   Records Processed: {prediction_count}")
 print("=" * 60)
 
 # Return output table name for downstream workflow coordination
