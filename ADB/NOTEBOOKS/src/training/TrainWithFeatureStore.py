@@ -325,12 +325,23 @@ print(classification_report(y_test, y_pred))
 # Set the registry URI to Unity Catalog (recommended)
 mlflow.set_registry_uri("databricks-uc")
 
+# Construct the full 3-level Unity Catalog model name
 full_model_name = f"{catalog}.{schema}.{model_name}"
+
+# Debug: Print the constructed model name
+print(f"🔍 Debug Information:")
+print(f"   Catalog: {catalog}")
+print(f"   Schema: {schema}")
+print(f"   Model Name: {model_name}")
+print(f"   Full Model Name: {full_model_name}")
+
 from mlflow.models import infer_signature
 
 # Example: X_train is your training data, model is your trained CatBoost model
 signature = infer_signature(X_train, model.predict(X_train))
 input_example = X_train.iloc[[0]]  # or use a representative sample
+
+print(f"📝 Logging model to MLflow with name: {full_model_name}")
 
 mlflow.catboost.log_model(
     model,
@@ -340,25 +351,28 @@ mlflow.catboost.log_model(
     input_example=input_example
 )
 
+print(f"✅ Model logged successfully!")
+
 # COMMAND ----------
 
 # DBTITLE 1,Set model alias to Challenger
-model_name = f"{catalog}.{schema}.{model_name}"
+# Use the full_model_name constructed above (don't redefine model_name)
+print(f"🏷️  Setting Challenger alias for model: {full_model_name}")
 
 client = MlflowClient(registry_uri="databricks-uc")
-model_version = pp.get_latest_model_version(model_name)
-model_uri = f"models:/{model_name}/{model_version}"
+model_version = pp.get_latest_model_version(full_model_name)
+model_uri = f"models:/{full_model_name}/{model_version}"
 
 client.set_registered_model_alias(
-    name=model_name,
-    version=model_version,
-    alias="Challenger"
+    name=full_model_name, version=model_version, alias="Challenger"
 )
+
+print(f"✅ Challenger alias set for version {model_version}")
 
 # COMMAND ----------
 
 # DBTITLE 1,Set model deployment information
 dbutils.jobs.taskValues.set("model_uri", model_uri)
-dbutils.jobs.taskValues.set("model_name", model_name)
+dbutils.jobs.taskValues.set("model_name", full_model_name)
 dbutils.jobs.taskValues.set("model_version", model_version)
 dbutils.notebook.exit(model_uri)
