@@ -29,7 +29,6 @@ resources:
               SCHEMA: ${var.SCHEMA}
               ENV : ${bundle.target}
               CATALOG: ${var.CATALOG}
-              TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
               MODEL_NAME: ${var.MODEL_NAME}
               EXPERIMENT_NAME: ${var.EXPERIMENT_NAME}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
@@ -44,7 +43,6 @@ resources:
               SCHEMA: ${var.SCHEMA}
               ENV : ${bundle.target}
               CATALOG: ${var.CATALOG}
-              TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
               MODEL_NAME: ${var.MODEL_NAME}
               EXPERIMENT_NAME: ${var.EXPERIMENT_NAME}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
