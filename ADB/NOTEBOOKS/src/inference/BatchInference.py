@@ -144,6 +144,7 @@ try:
         model_version=model_version,
         ts=prediction_timestamp,
         granularity=granularity,
+        prediction_col=prediction_col,
     )
 
     print(f"✅ Batch inference completed successfully")

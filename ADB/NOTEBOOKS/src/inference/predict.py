@@ -106,6 +106,7 @@ def predict_batch(
     model_version: str,
     ts: str,
     granularity: str = "party",
+    prediction_col: str = "prediction",
 ):
     """
     Executes batch prediction on input data with feature engineering.
@@ -121,6 +122,7 @@ def predict_batch(
         model_version: Version identifier of the model being used
         ts: Timestamp string for prediction metadata
         granularity: Granularity level for predictions (e.g., party, claims, agent)
+        prediction_col: Name of the prediction column to create (default: "prediction")
 
     Returns:
         PySpark DataFrame with predictions and metadata columns
@@ -267,8 +269,9 @@ def predict_batch(
         from pyspark.sql.types import StringType, StructField, TimestampType
 
         # Get the input schema and add prediction columns
+        # Use the prediction_col parameter name instead of hardcoding "prediction"
         output_schema = base_df.schema.add(
-            StructField("prediction", StringType(), True)
+            StructField(prediction_col, StringType(), True)
         )
         output_schema = output_schema.add(StructField("model_id", StringType(), True))
         output_schema = output_schema.add(
@@ -301,8 +304,8 @@ def predict_batch(
             model_obj = broadcasted_model.value
             predictions = model_obj.predict(X_batch)
 
-            # Add prediction columns
-            batch_pdf["prediction"] = predictions.astype(str)
+            # Add prediction columns using the parameter name
+            batch_pdf[prediction_col] = predictions.astype(str)
             batch_pdf["model_id"] = model_version
             batch_pdf["timestamp"] = pd.to_datetime(ts)
             batch_pdf["granularity"] = granularity
