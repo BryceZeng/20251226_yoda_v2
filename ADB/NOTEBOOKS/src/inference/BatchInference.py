@@ -50,7 +50,7 @@ print("📦 All libraries imported successfully")
 try:
     # Input/Output Configuration
     input_table_name = dbutils.widgets.get("INFERENCE_INPUT_TABLE")
-    
+
     # HARDCODED OUTPUT TABLE: All predictions from ALL projects write to a common location
     # This enables cross-project analytics and centralized monitoring in feature_store schema
     # Format: ai_engineering.feature_store.predictions (NOT project-specific)
@@ -146,15 +146,8 @@ try:
         granularity=granularity,
     )
 
-    prediction_count = predictions_df.count()
     print(f"✅ Batch inference completed successfully")
-    print(f"📊 Generated {prediction_count} predictions")
-
-    if prediction_count == 0:
-        print("⚠️  WARNING: No predictions were generated!")
-        print(f"   Input table '{input_table_name}' may be empty or have no valid rows")
-        print("   Exiting without writing to predictions table")
-        dbutils.notebook.exit("No predictions generated - input data empty")
+    print(f"📊 Predictions generated (will be written to table)")
 
 except Exception as e:
     error_msg = f"Batch inference failed: {str(e)}"
@@ -266,53 +259,36 @@ try:
         # - WHEN MATCHED: Update the existing record with new prediction
         # - WHEN NOT MATCHED: Insert the new record
         print(f"🔄 Merging predictions based on ID column to avoid duplicates...")
-        delta_table.alias("target").merge(
-            enriched_predictions.alias("source"), "target.id = source.id"
-        ).whenMatchedUpdate(
-            set={
-                "uuid": col("source.uuid"),
-                "model_name": col("source.model_name"),
-                "model_version": col("source.model_version"),
-                "prediction": col("source.prediction"),
-                "prediction_type": col("source.prediction_type"),
-                "project_name": col("source.project_name"),
-                "granularity": col("source.granularity"),
-                "timestamp": col("source.timestamp"),
-            }
-        ).whenNotMatchedInsertAll().execute()
+        merge_result = (
+            delta_table.alias("target")
+            .merge(enriched_predictions.alias("source"), "target.id = source.id")
+            .whenMatchedUpdate(
+                set={
+                    "uuid": col("source.uuid"),
+                    "model_name": col("source.model_name"),
+                    "model_version": col("source.model_version"),
+                    "prediction": col("source.prediction"),
+                    "prediction_type": col("source.prediction_type"),
+                    "project_name": col("source.project_name"),
+                    "granularity": col("source.granularity"),
+                    "timestamp": col("source.timestamp"),
+                }
+            )
+            .whenNotMatchedInsertAll()
+            .execute()
+        )
 
         print("✅ MERGE operation completed - no duplicate IDs created")
 
     else:
         print("🆕 Table doesn't exist - creating new table...")
-        print(
-            f"💾 Writing {enriched_predictions.count()} records in 'overwrite' mode..."
-        )
+        print(f"💾 Writing predictions in 'overwrite' mode...")
         enriched_predictions.write.format("delta").mode("overwrite").option(
             "mergeSchema", "true"
         ).option("overwriteSchema", "true").saveAsTable(output_table_name)
         print("✅ Predictions table created successfully")
 
-    # Verify write by reading back
-    result_count = spark.table(output_table_name).count()
-    print(f"📊 Verification: Table now contains {result_count} total records")
-
-    # Check for duplicates
-    duplicate_check = spark.sql(
-        f"""
-        SELECT id, COUNT(*) as count
-        FROM {output_table_name}
-        GROUP BY id
-        HAVING COUNT(*) > 1
-    """
-    )
-
-    duplicate_count = duplicate_check.count()
-    if duplicate_count > 0:
-        print(f"⚠️  WARNING: Found {duplicate_count} duplicate IDs!")
-        duplicate_check.show(10)
-    else:
-        print(f"✅ No duplicate IDs found - data integrity confirmed")
+    print(f"📊 Predictions written to {output_table_name} successfully")
 
 except Exception as e:
     error_msg = f"Failed to save predictions: {str(e)}"
@@ -331,7 +307,7 @@ print(f"   Output Table: {output_table_name}")
 print(f"   Model: {model_name} (v{model_version})")
 print(f"   Batch UUID: {batch_uuid}")
 print(f"   Environment: {env}")
-print(f"   Records Processed: {prediction_count}")
+print(f"   Status: Predictions written successfully")
 print("=" * 60)
 
 # Return output table name for downstream workflow coordination

@@ -49,7 +49,7 @@ jobs:
         FEATURE_ENGINEERING_JOB_NAME: feature_engineering_workflow_job
         BATCH_INFERENCE_JOB_NAME: batch_inference_workflow_job
         UNIT_TEST_JOB_NAME: unit_test_job
-        DEPLOY_AS_MODEL: 'false'
+        DEPLOY_AS_MODEL: 'true'
       secrets:
               TOKEN: ${{ secrets.PERSONAL_APE_ACCESS_TOKEN }}
               HOST : ${{secrets.DATABRICKS_APE_HOST}}

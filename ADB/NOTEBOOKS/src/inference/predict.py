@@ -222,47 +222,33 @@ def predict_batch(
     # =============================================================================
     # Feature Engineering - Apply same transformations as training
     # =============================================================================
-    print("🔄 Applying feature engineering...")
+    print("🔄 Applying feature engineering and predictions in batches...")
 
-    try:
-        # Convert to Pandas for feature engineering
-        data_pdf = base_df.toPandas()
-        print(f"✅ Converted to Pandas: {len(data_pdf)} rows")
+    # Define feature columns (same as training)
+    feature_cols = [
+        "gender",
+        "marital_status",
+        "salary",
+        "is_smoker",
+        "policy_count",
+        "bmi",
+        "hazardous_lifestyle_ind",
+        "communication_consent",
+        "segment_description",
+        "ctp_value",
+        "upgrader_shortfall",
+        "microsegment",
+        "age",
+        "months_since_consent",
+    ]
 
-        # Apply feature engineering
-        data_pdf = engineer_features(data_pdf)
-        print(f"✅ Feature engineering completed")
-
-        # Define feature columns (same as training)
-        feature_cols = [
-            "gender",
-            "marital_status",
-            "salary",
-            "is_smoker",
-            "policy_count",
-            "bmi",
-            "hazardous_lifestyle_ind",
-            "communication_consent",
-            "segment_description",
-            "ctp_value",
-            "upgrader_shortfall",
-            "microsegment",
-            "age",
-            "months_since_consent",
-        ]
-
-        # Filter to only existing columns
-        feature_cols = [col for col in feature_cols if col in data_pdf.columns]
-        print(f"📊 Using {len(feature_cols)} features for prediction")
-
-        X = data_pdf[feature_cols]
-
-    except Exception as e:
-        print(f"❌ Feature engineering failed: {str(e)}")
-        raise Exception(f"Feature engineering failed: {str(e)}")
+    # Filter to only existing columns in the schema
+    available_cols = base_df.columns
+    feature_cols = [col for col in feature_cols if col in available_cols]
+    print(f"📊 Using {len(feature_cols)} features for prediction")
 
     # =============================================================================
-    # Model Loading and Prediction
+    # Model Loading and Batch Prediction with mapInPandas
     # =============================================================================
     print(f"🎯 Loading model for prediction: {model_uri}")
 
@@ -271,17 +257,74 @@ def predict_batch(
         model = mlflow.pyfunc.load_model(model_uri)
         print(f"✅ Model loaded successfully")
 
-        # Make predictions
-        print("🔮 Executing batch predictions...")
-        predictions = model.predict(X)
-        print(f"✅ Generated {len(predictions)} predictions")
+        # Define the schema for the output
+        from pyspark.sql.types import StringType, StructField, StructType, TimestampType
 
-        # Add predictions back to the DataFrame
-        data_pdf["prediction"] = predictions
+        # Get the input schema and add prediction columns
+        output_schema = base_df.schema.add(
+            StructField("prediction", StringType(), True)
+        )
+        output_schema = output_schema.add(StructField("model_id", StringType(), True))
+        output_schema = output_schema.add(
+            StructField("timestamp", TimestampType(), True)
+        )
+        output_schema = output_schema.add(
+            StructField("granularity", StringType(), True)
+        )
 
-        # Convert back to Spark DataFrame
-        prediction_df = spark_session.createDataFrame(data_pdf)
-        print(f"✅ Prediction completed successfully")
+        # Function to apply feature engineering and predictions to each partition
+        def process_partition(iterator):
+            """
+            Process each partition independently to avoid memory issues.
+            This function runs on executors, not the driver.
+            """
+            from datetime import datetime
+
+            import pandas as pd
+
+            for batch_pdf in iterator:
+                if len(batch_pdf) == 0:
+                    continue
+
+                # Apply feature engineering to this batch
+                batch_pdf = engineer_features(batch_pdf)
+
+                # Extract features for prediction
+                batch_feature_cols = [
+                    col for col in feature_cols if col in batch_pdf.columns
+                ]
+                X_batch = batch_pdf[batch_feature_cols]
+
+                # Make predictions for this batch
+                predictions = model.predict(X_batch)
+
+                # Add prediction columns
+                batch_pdf["prediction"] = predictions.astype(str)
+                batch_pdf["model_id"] = model_version
+                batch_pdf["timestamp"] = pd.to_datetime(ts)
+                batch_pdf["granularity"] = granularity
+
+                yield batch_pdf
+
+        # Repartition the data to process in smaller chunks (adjust num_partitions based on data size)
+        # Each partition will be processed independently by executors
+        num_partitions = max(
+            10, int(row_count / 10000)
+        )  # At least 10 partitions, or 1 per 10k rows
+        print(
+            f"🔀 Repartitioning data into {num_partitions} partitions for distributed processing"
+        )
+
+        repartitioned_df = base_df.repartition(num_partitions)
+
+        # Apply the processing function to each partition using mapInPandas
+        # This distributes the work across executors and avoids collecting to the driver
+        print("🔮 Executing distributed batch predictions across executors...")
+        prediction_df = repartitioned_df.mapInPandas(
+            process_partition, schema=output_schema
+        )
+
+        print(f"✅ Distributed prediction pipeline configured successfully")
 
     except Exception as e:
         error_msg = f"Model prediction failed: {str(e)}"
@@ -291,17 +334,11 @@ def predict_batch(
     # =============================================================================
     # Output Data Preparation
     # =============================================================================
-    print("📝 Preparing output with prediction metadata...")
+    print("📝 Output ready with prediction metadata...")
 
-    # Standardize output format with comprehensive metadata
-    output_df = (
-        prediction_df.withColumn(
-            "prediction", prediction_df["prediction"].cast("string")
-        )  # Cast prediction to string
-        .withColumn("model_id", lit(model_version))  # Track model version
-        .withColumn("timestamp", to_timestamp(lit(ts)))  # Prediction timestamp
-        .withColumn("granularity", lit(granularity))  # Add granularity level
-    )
+    # The predictions are already prepared with all necessary columns
+    # No need to convert or add more columns - everything is done in the partition processing
+    output_df = prediction_df
 
     print("🎉 Batch prediction pipeline completed successfully")
     return output_df
