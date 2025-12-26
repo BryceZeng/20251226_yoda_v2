@@ -294,6 +294,9 @@ def predict_batch(
             StructField("granularity", StringType(), True)
         )
 
+        # Get the list of expected output columns (original columns + prediction columns)
+        expected_output_cols = [field.name for field in output_schema.fields]
+
         # Function to apply feature engineering and predictions using pandas_udf
         @pandas_udf(output_schema, PandasUDFType.GROUPED_MAP)
         def predict_batch_udf(batch_pdf):
@@ -398,7 +401,9 @@ def predict_batch(
             batch_pdf["timestamp"] = pd.to_datetime(ts)
             batch_pdf["granularity"] = granularity
 
-            return batch_pdf
+            # Return only the columns that match the output schema
+            # This drops engineered feature columns and temporary columns
+            return batch_pdf[expected_output_cols]
 
         # Add a partition key for grouping (process in chunks based on row number)
         # This ensures we process data in manageable batches
