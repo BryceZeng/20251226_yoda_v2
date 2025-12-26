@@ -26,7 +26,6 @@ resources:
               MODEL_NAME: ${var.MODEL_NAME}
               ENV : ${bundle.target}
               DEST_MODEL_NAME: ${var.DEST_MODEL_NAME}
-              OUTPUT_PREDICTION_TABLE: ${var.OUTPUT_PREDICTION_TABLE}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
 
       schedule:

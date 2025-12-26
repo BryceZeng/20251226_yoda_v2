@@ -129,6 +129,16 @@ jobs:
         run: |
           cd ADB/NOTEBOOKS
           ls -lrt
+      - name: validate Databricks
+        if: inputs.ENVIRONMENT == 'dev'
+        env:
+          DATABRICKS_HOST: ${{secrets.HOST}}
+          DATABRICKS_TOKEN: ${{secrets.TOKEN}}
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS
+          databricks bundle validate -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --output json
       - name: summarize Databricks deployment
         if: inputs.ENVIRONMENT == 'dev'
         env:
@@ -193,6 +203,15 @@ jobs:
         run: |
           cd ADB/NOTEBOOKS
           ls -lrt
+      - name: validate Databricks
+        env:
+          DATABRICKS_HOST: ${{secrets.HOST}}
+          DATABRICKS_TOKEN: ${{secrets.TOKEN}}
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+          DEPLOYMENT_FOLDER_NAME: ${{ inputs.FOLDER_NAME }}
+        run: |
+          cd ADB/NOTEBOOKS
+          databricks bundle validate -t ${DEPLOYMENT_ENVIRONMENT} --var "folder_name=${DEPLOYMENT_FOLDER_NAME}" --output json
       - name: summarize Databricks deployment
         env:
           DATABRICKS_HOST: ${{secrets.HOST}}

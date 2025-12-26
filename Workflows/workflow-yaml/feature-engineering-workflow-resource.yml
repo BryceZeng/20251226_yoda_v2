@@ -31,7 +31,6 @@ resources:
               SCHEMA: ${var.SCHEMA}
               START_DATE: "2023-10-01"
               END_DATE: "2025-06-01"
-              GROUND_TRUTH_TABLE: ${var.GROUND_TRUTH_TABLE}
               PROJECT_NAME: ${var.PROJECT_NAME}
               # git source information of current ML resource deployment. It will be persisted as part of the workflow run
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}

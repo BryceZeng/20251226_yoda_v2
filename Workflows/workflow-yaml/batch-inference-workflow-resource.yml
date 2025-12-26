@@ -32,7 +32,6 @@ resources:
               MODEL_NAME: ${var.MODEL_NAME}
               ENV : ${bundle.target}
               INFERENCE_INPUT_TABLE: ${var.INFERENCE_INPUT_TABLE}
-              OUTPUT_PREDICTION_TABLE: ${var.OUTPUT_PREDICTION_TABLE}
               ID_COL: ${var.ID_COL}
               PREDICTION_COL: ${var.PREDICTION_COL}
               PROJECT_NAME: ${var.PROJECT_NAME}
