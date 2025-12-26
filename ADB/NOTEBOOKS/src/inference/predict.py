@@ -42,18 +42,9 @@ def engineer_features(df):
         df["policy_count"] = df["policy_number"].apply(
             lambda x: len(x) if isinstance(x, (list, tuple)) and x is not None else 0
         )
-    else:
-        # Create default column if source column is missing
-        df["policy_count"] = 0
-
-    # Ensure policy_count is integer type
-    df["policy_count"] = df["policy_count"].fillna(0).astype(int)
 
     # 2. Age calculation: trans_yyyymm - date_of_birth
     if "trans_yyyymm" in df.columns and "date_of_birth" in df.columns:
-        # Ensure trans_yyyymm is string format
-        df["trans_yyyymm"] = df["trans_yyyymm"].astype(str)
-
         df["trans_yyyymm_dt"] = pd.to_datetime(
             df["trans_yyyymm"] + "-01", errors="coerce"
         )
@@ -63,21 +54,9 @@ def engineer_features(df):
             (df["trans_yyyymm_dt"] - df["date_of_birth_dt"]).dt.days / 365.25
         ).fillna(-1)
         df["age"] = df["age"].clip(lower=0, upper=120)
-    else:
-        # Create default column if source columns are missing
-        df["age"] = -1.0
-
-    # Ensure age is float type
-    df["age"] = df["age"].fillna(-1).astype(float)
 
     # 3. Months since communication consent: trans_yyyymm - communication_consent_date
     if "trans_yyyymm" in df.columns and "communication_consent_date" in df.columns:
-        if "trans_yyyymm_dt" not in df.columns:
-            df["trans_yyyymm"] = df["trans_yyyymm"].astype(str)
-            df["trans_yyyymm_dt"] = pd.to_datetime(
-                df["trans_yyyymm"] + "-01", errors="coerce"
-            )
-
         df["communication_consent_date_dt"] = pd.to_datetime(
             df["communication_consent_date"], errors="coerce"
         )
@@ -93,12 +72,6 @@ def engineer_features(df):
                 - df["communication_consent_date_dt"].dt.month
             )
         ).fillna(-1)
-    else:
-        # Create default column if source columns are missing
-        df["months_since_consent"] = -1.0
-
-    # Ensure months_since_consent is float type
-    df["months_since_consent"] = df["months_since_consent"].fillna(-1).astype(float)
 
     # 4. Handle categorical nulls
     categorical_cols = [
@@ -108,6 +81,23 @@ def engineer_features(df):
         "microsegment",
     ]
     for col in categorical_cols:
+        if col in df.columns:
+            df[col] = df[col].fillna("UNKNOWN").astype(str)
+
+    # 5. Handle numerical nulls
+    numerical_cols = ["salary", "bmi", "ctp_value", "upgrader_shortfall"]
+    for col in numerical_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(-1)
+
+    # 6. Handle binary indicators
+    binary_cols = ["is_smoker", "hazardous_lifestyle_ind", "communication_consent"]
+    for col in binary_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
+
+    return df
+
         if col in df.columns:
             df[col] = df[col].fillna("UNKNOWN").astype(str)
 
@@ -326,6 +316,13 @@ def predict_batch(
             if len(batch_pdf) == 0:
                 return batch_pdf
 
+            # Debug: Check what columns we have before feature engineering
+            import sys
+            print(f"DEBUG: Columns before engineering: {batch_pdf.columns.tolist()}", file=sys.stderr)
+            print(f"DEBUG: Has trans_yyyymm: {'trans_yyyymm' in batch_pdf.columns}", file=sys.stderr)
+            print(f"DEBUG: Has date_of_birth: {'date_of_birth' in batch_pdf.columns}", file=sys.stderr)
+            print(f"DEBUG: Has policy_number: {'policy_number' in batch_pdf.columns}", file=sys.stderr)
+
             # Ensure trans_yyyymm is string format for pandas processing
             if "trans_yyyymm" in batch_pdf.columns:
                 batch_pdf["trans_yyyymm"] = batch_pdf["trans_yyyymm"].astype(str)
@@ -333,10 +330,18 @@ def predict_batch(
             # Apply feature engineering to this batch
             batch_pdf = engineer_features(batch_pdf)
 
+            # Debug: Check what columns we have after feature engineering
+            print(f"DEBUG: Columns after engineering: {batch_pdf.columns.tolist()}", file=sys.stderr)
+            print(f"DEBUG: Has policy_count: {'policy_count' in batch_pdf.columns}", file=sys.stderr)
+            print(f"DEBUG: Has age: {'age' in batch_pdf.columns}", file=sys.stderr)
+            print(f"DEBUG: Has months_since_consent: {'months_since_consent' in batch_pdf.columns}", file=sys.stderr)
+
             # Ensure all required feature columns are present
             # If any are missing after engineering, create them with default values
+            missing_cols = []
             for col in feature_cols:
                 if col not in batch_pdf.columns:
+                    missing_cols.append(col)
                     # Determine appropriate default value based on column type
                     if col in [
                         "gender",
@@ -354,6 +359,9 @@ def predict_batch(
                         batch_pdf[col] = 0
                     else:  # numerical columns (age, months_since_consent, etc.)
                         batch_pdf[col] = -1.0
+
+            if missing_cols:
+                print(f"DEBUG: Created missing columns with defaults: {missing_cols}", file=sys.stderr)
 
             # Ensure correct data types for all features
             # Categorical features as strings
@@ -390,6 +398,7 @@ def predict_batch(
 
             # Extract features for prediction - now all columns should exist with correct types
             X_batch = batch_pdf[feature_cols]
+            print(f"DEBUG: X_batch shape: {X_batch.shape}, columns: {X_batch.columns.tolist()}", file=sys.stderr)
 
             # Get the broadcasted model and make predictions
             model_obj = broadcasted_model.value
