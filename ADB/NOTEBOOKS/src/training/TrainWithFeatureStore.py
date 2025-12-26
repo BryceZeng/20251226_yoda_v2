@@ -33,14 +33,12 @@ from sklearn.model_selection import train_test_split
 dbutils.widgets.text("SCHEMA", "prj_yoda", "Schema")
 dbutils.widgets.text("ENV", "dev", "Environment")
 dbutils.widgets.text("CATALOG", "ai_engineering", "Catalog")
-dbutils.widgets.text("TRAINING_DATA_PATH", "/path/to/data", "Training Data Path")
 dbutils.widgets.text("MODEL_NAME", "my_model", "Model Name")
 dbutils.widgets.text("EXPERIMENT_NAME", "my_experiment", "Experiment Name")
 
 schema = dbutils.widgets.get("SCHEMA")
 env = dbutils.widgets.get("ENV")
 catalog = dbutils.widgets.get("CATALOG")
-input_table_path = dbutils.widgets.get("TRAINING_DATA_PATH")
 model_name = dbutils.widgets.get("MODEL_NAME")
 experiment_name = dbutils.widgets.get("EXPERIMENT_NAME")
 

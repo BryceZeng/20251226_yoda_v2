@@ -16,7 +16,6 @@ from mlflow.tracking.client import MlflowClient
 schema = dbutils.widgets.get("SCHEMA")
 catalog = dbutils.widgets.get("CATALOG")
 env = dbutils.widgets.get("ENV")
-input_table_path = dbutils.widgets.get("TRAINING_DATA_PATH")
 model_name = dbutils.widgets.get("MODEL_NAME")
 experiment_name = dbutils.widgets.get("EXPERIMENT_NAME")
 # pickup_features_table = dbutils.widgets.get("PICKUP_FEATURES_TABLE")
