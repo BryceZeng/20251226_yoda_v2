@@ -50,10 +50,24 @@ def engineer_features(df):
         )
         df["date_of_birth_dt"] = pd.to_datetime(df["date_of_birth"], errors="coerce")
 
-        df["age"] = (
-            (df["trans_yyyymm_dt"] - df["date_of_birth_dt"]).dt.days / 365.25
-        ).fillna(-1)
-        df["age"] = df["age"].clip(lower=0, upper=120)
+        # Calculate age with overflow protection
+        try:
+            # Only calculate for valid dates (not NaT)
+            valid_mask = df["trans_yyyymm_dt"].notna() & df["date_of_birth_dt"].notna()
+            df["age"] = -1.0  # Default value
+
+            if valid_mask.any():
+                # Calculate age only for valid dates
+                age_days = (
+                    df.loc[valid_mask, "trans_yyyymm_dt"]
+                    - df.loc[valid_mask, "date_of_birth_dt"]
+                ).dt.days
+                df.loc[valid_mask, "age"] = (age_days / 365.25).fillna(-1)
+                # Clip to reasonable range
+                df["age"] = df["age"].clip(lower=0, upper=120)
+        except (OverflowError, ValueError) as e:
+            # If overflow occurs, use default value
+            df["age"] = -1.0
 
     # 3. Months since communication consent: trans_yyyymm - communication_consent_date
     if "trans_yyyymm" in df.columns and "communication_consent_date" in df.columns:
@@ -61,17 +75,29 @@ def engineer_features(df):
             df["communication_consent_date"], errors="coerce"
         )
 
-        df["months_since_consent"] = (
-            (
-                df["trans_yyyymm_dt"].dt.year
-                - df["communication_consent_date_dt"].dt.year
+        # Calculate months_since_consent with overflow protection
+        try:
+            valid_mask = (
+                df["trans_yyyymm_dt"].notna()
+                & df["communication_consent_date_dt"].notna()
             )
-            * 12
-            + (
-                df["trans_yyyymm_dt"].dt.month
-                - df["communication_consent_date_dt"].dt.month
-            )
-        ).fillna(-1)
+            df["months_since_consent"] = -1.0  # Default value
+
+            if valid_mask.any():
+                df.loc[valid_mask, "months_since_consent"] = (
+                    (
+                        df.loc[valid_mask, "trans_yyyymm_dt"].dt.year
+                        - df.loc[valid_mask, "communication_consent_date_dt"].dt.year
+                    )
+                    * 12
+                    + (
+                        df.loc[valid_mask, "trans_yyyymm_dt"].dt.month
+                        - df.loc[valid_mask, "communication_consent_date_dt"].dt.month
+                    )
+                ).fillna(-1)
+        except (OverflowError, ValueError) as e:
+            # If overflow occurs, use default value
+            df["months_since_consent"] = -1.0
 
     # 4. Handle categorical nulls
     categorical_cols = [
