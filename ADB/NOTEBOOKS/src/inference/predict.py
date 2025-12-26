@@ -42,6 +42,9 @@ def engineer_features(df):
         df["policy_count"] = df["policy_number"].apply(
             lambda x: len(x) if isinstance(x, (list, tuple)) and x is not None else 0
         )
+    else:
+        # Create default column if source column is missing
+        df["policy_count"] = 0
 
     # 2. Age calculation: trans_yyyymm - date_of_birth
     if "trans_yyyymm" in df.columns and "date_of_birth" in df.columns:
@@ -54,9 +57,17 @@ def engineer_features(df):
             (df["trans_yyyymm_dt"] - df["date_of_birth_dt"]).dt.days / 365.25
         ).fillna(-1)
         df["age"] = df["age"].clip(lower=0, upper=120)
+    else:
+        # Create default column if source columns are missing
+        df["age"] = -1
 
     # 3. Months since communication consent: trans_yyyymm - communication_consent_date
     if "trans_yyyymm" in df.columns and "communication_consent_date" in df.columns:
+        if "trans_yyyymm_dt" not in df.columns:
+            df["trans_yyyymm_dt"] = pd.to_datetime(
+                df["trans_yyyymm"] + "-01", errors="coerce"
+            )
+
         df["communication_consent_date_dt"] = pd.to_datetime(
             df["communication_consent_date"], errors="coerce"
         )
@@ -72,6 +83,9 @@ def engineer_features(df):
                 - df["communication_consent_date_dt"].dt.month
             )
         ).fillna(-1)
+    else:
+        # Create default column if source columns are missing
+        df["months_since_consent"] = -1
 
     # 4. Handle categorical nulls
     categorical_cols = [
@@ -216,6 +230,16 @@ def predict_batch(
             )
             return spark_session.createDataFrame([], base_df.schema)
 
+        # Create trans_yyyymm from snapshot_date if it doesn't exist
+        # This is required for age and months_since_consent feature engineering
+        if "trans_yyyymm" not in base_df.columns and "snapshot_date" in base_df.columns:
+            from pyspark.sql.functions import date_format
+
+            base_df = base_df.withColumn(
+                "trans_yyyymm", date_format("snapshot_date", "yyyy-MM")
+            )
+            print(f"✅ Created trans_yyyymm column from snapshot_date")
+
     except Exception as e:
         error_msg = f"Failed to load data from '{input_table_name}': {str(e)}"
         print(f"❌ {error_msg}")
@@ -294,11 +318,30 @@ def predict_batch(
             # Apply feature engineering to this batch
             batch_pdf = engineer_features(batch_pdf)
 
-            # Extract features for prediction
-            batch_feature_cols = [
-                col for col in feature_cols if col in batch_pdf.columns
-            ]
-            X_batch = batch_pdf[batch_feature_cols]
+            # Ensure all required feature columns are present
+            # If any are missing after engineering, create them with default values
+            for col in feature_cols:
+                if col not in batch_pdf.columns:
+                    # Determine appropriate default value based on column type
+                    if col in [
+                        "gender",
+                        "marital_status",
+                        "segment_description",
+                        "microsegment",
+                    ]:
+                        batch_pdf[col] = "UNKNOWN"
+                    elif col in [
+                        "is_smoker",
+                        "hazardous_lifestyle_ind",
+                        "communication_consent",
+                        "policy_count",
+                    ]:
+                        batch_pdf[col] = 0
+                    else:  # numerical columns
+                        batch_pdf[col] = -1
+
+            # Extract features for prediction - now all columns should exist
+            X_batch = batch_pdf[feature_cols]
 
             # Get the broadcasted model and make predictions
             model_obj = broadcasted_model.value
