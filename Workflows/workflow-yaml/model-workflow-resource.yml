@@ -32,7 +32,6 @@ resources:
               TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
               MODEL_NAME: ${var.MODEL_NAME}
               EXPERIMENT_NAME: ${var.EXPERIMENT_NAME}
-              SIMPLE_FEATURES_TABLE: ${var.SIMPLE_FEATURES_TABLE}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
         - task_key: ChallengerValidation
           job_cluster_key: model_training_job_cluster
@@ -48,7 +47,6 @@ resources:
               TRAINING_DATA_PATH: ${var.TRAINING_DATA_PATH}
               MODEL_NAME: ${var.MODEL_NAME}
               EXPERIMENT_NAME: ${var.EXPERIMENT_NAME}
-              SIMPLE_FEATURES_TABLE: ${var.SIMPLE_FEATURES_TABLE}
               git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
       schedule:
         quartz_cron_expression: "0 0 9 * * ?" # daily at 9am
