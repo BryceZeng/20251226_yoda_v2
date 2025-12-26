@@ -221,17 +221,23 @@ def predict_batch(
             today = datetime.now().strftime("%Y-%m-%d")
 
             query = f"""
-                SELECT * FROM {input_table_name}
+                SELECT *, DATE_FORMAT(snapshot_date, 'yyyy-MM') as trans_yyyymm
+                FROM {input_table_name}
                 WHERE snapshot_date >= '{start_date_str}'
                   AND snapshot_date <= '{today}'
             """
             print(f"📆 Filtering data from {start_date_str} to {today}")
         else:
             # Get all available data if no existing predictions
-            query = f"SELECT * FROM {input_table_name}"
+            query = f"""
+                SELECT *, DATE_FORMAT(snapshot_date, 'yyyy-MM') as trans_yyyymm
+                FROM {input_table_name}
+            """
             print(f"📆 Processing all available data (no existing predictions)")
 
         base_df = spark_session.sql(query)
+
+        # Get row count for partition calculation
         row_count = base_df.count()
         col_count = len(base_df.columns)
         print(f"✅ Data loaded: {row_count} rows, {col_count} columns")
@@ -243,15 +249,7 @@ def predict_batch(
             )
             return spark_session.createDataFrame([], base_df.schema)
 
-        # Create trans_yyyymm from snapshot_date if it doesn't exist
-        # This is required for age and months_since_consent feature engineering
-        if "trans_yyyymm" not in base_df.columns and "snapshot_date" in base_df.columns:
-            from pyspark.sql.functions import date_format
-
-            base_df = base_df.withColumn(
-                "trans_yyyymm", date_format("snapshot_date", "yyyy-MM")
-            )
-            print(f"✅ Created trans_yyyymm column from snapshot_date")
+        print(f"✅ trans_yyyymm column created from snapshot_date in SQL query")
 
     except Exception as e:
         error_msg = f"Failed to load data from '{input_table_name}': {str(e)}"
