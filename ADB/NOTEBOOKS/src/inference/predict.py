@@ -98,23 +98,6 @@ def engineer_features(df):
 
     return df
 
-        if col in df.columns:
-            df[col] = df[col].fillna("UNKNOWN").astype(str)
-
-    # 5. Handle numerical nulls
-    numerical_cols = ["salary", "bmi", "ctp_value", "upgrader_shortfall"]
-    for col in numerical_cols:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(-1)
-
-    # 6. Handle binary indicators
-    binary_cols = ["is_smoker", "hazardous_lifestyle_ind", "communication_consent"]
-    for col in binary_cols:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
-
-    return df
-
 
 def predict_batch(
     spark_session,
