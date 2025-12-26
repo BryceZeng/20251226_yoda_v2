@@ -408,6 +408,16 @@ def predict_batch(
             # Return only the columns that match the output schema
             # Using original_batch preserves the original column types
             return original_batch[expected_output_cols]
+
+        # Add a partition key for grouping (process in chunks based on row number)
+        # This ensures we process data in manageable batches
+        from pyspark.sql.functions import floor, monotonically_increasing_id
+
+        batch_size = 10000  # Process 10k rows at a time
+
+        df_with_batch_id = base_df.withColumn("_row_id", monotonically_increasing_id())
+        df_with_batch_id = df_with_batch_id.withColumn(
+            "_batch_id", floor(df_with_batch_id["_row_id"] / batch_size)
         )
 
         print(f"🔀 Processing data in batches of {batch_size} rows")
