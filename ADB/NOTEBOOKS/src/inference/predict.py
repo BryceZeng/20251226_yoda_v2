@@ -46,8 +46,14 @@ def engineer_features(df):
         # Create default column if source column is missing
         df["policy_count"] = 0
 
+    # Ensure policy_count is integer type
+    df["policy_count"] = df["policy_count"].fillna(0).astype(int)
+
     # 2. Age calculation: trans_yyyymm - date_of_birth
     if "trans_yyyymm" in df.columns and "date_of_birth" in df.columns:
+        # Ensure trans_yyyymm is string format
+        df["trans_yyyymm"] = df["trans_yyyymm"].astype(str)
+
         df["trans_yyyymm_dt"] = pd.to_datetime(
             df["trans_yyyymm"] + "-01", errors="coerce"
         )
@@ -59,11 +65,15 @@ def engineer_features(df):
         df["age"] = df["age"].clip(lower=0, upper=120)
     else:
         # Create default column if source columns are missing
-        df["age"] = -1
+        df["age"] = -1.0
+
+    # Ensure age is float type
+    df["age"] = df["age"].fillna(-1).astype(float)
 
     # 3. Months since communication consent: trans_yyyymm - communication_consent_date
     if "trans_yyyymm" in df.columns and "communication_consent_date" in df.columns:
         if "trans_yyyymm_dt" not in df.columns:
+            df["trans_yyyymm"] = df["trans_yyyymm"].astype(str)
             df["trans_yyyymm_dt"] = pd.to_datetime(
                 df["trans_yyyymm"] + "-01", errors="coerce"
             )
@@ -85,7 +95,10 @@ def engineer_features(df):
         ).fillna(-1)
     else:
         # Create default column if source columns are missing
-        df["months_since_consent"] = -1
+        df["months_since_consent"] = -1.0
+
+    # Ensure months_since_consent is float type
+    df["months_since_consent"] = df["months_since_consent"].fillna(-1).astype(float)
 
     # 4. Handle categorical nulls
     categorical_cols = [
@@ -315,6 +328,10 @@ def predict_batch(
             if len(batch_pdf) == 0:
                 return batch_pdf
 
+            # Ensure trans_yyyymm is string format for pandas processing
+            if "trans_yyyymm" in batch_pdf.columns:
+                batch_pdf["trans_yyyymm"] = batch_pdf["trans_yyyymm"].astype(str)
+
             # Apply feature engineering to this batch
             batch_pdf = engineer_features(batch_pdf)
 
@@ -337,10 +354,43 @@ def predict_batch(
                         "policy_count",
                     ]:
                         batch_pdf[col] = 0
-                    else:  # numerical columns
-                        batch_pdf[col] = -1
+                    else:  # numerical columns (age, months_since_consent, etc.)
+                        batch_pdf[col] = -1.0
 
-            # Extract features for prediction - now all columns should exist
+            # Ensure correct data types for all features
+            # Categorical features as strings
+            for col in [
+                "gender",
+                "marital_status",
+                "segment_description",
+                "microsegment",
+            ]:
+                if col in batch_pdf.columns:
+                    batch_pdf[col] = batch_pdf[col].astype(str)
+
+            # Integer features
+            for col in [
+                "is_smoker",
+                "hazardous_lifestyle_ind",
+                "communication_consent",
+                "policy_count",
+            ]:
+                if col in batch_pdf.columns:
+                    batch_pdf[col] = batch_pdf[col].astype(int)
+
+            # Float features
+            for col in [
+                "salary",
+                "bmi",
+                "ctp_value",
+                "upgrader_shortfall",
+                "age",
+                "months_since_consent",
+            ]:
+                if col in batch_pdf.columns:
+                    batch_pdf[col] = batch_pdf[col].astype(float)
+
+            # Extract features for prediction - now all columns should exist with correct types
             X_batch = batch_pdf[feature_cols]
 
             # Get the broadcasted model and make predictions
