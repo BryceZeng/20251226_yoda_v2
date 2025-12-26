@@ -307,6 +307,9 @@ def predict_batch(
             if len(batch_pdf) == 0:
                 return batch_pdf
 
+            # Save original dataframe to preserve schema
+            original_batch = batch_pdf.copy()
+
             # Debug: Check what columns we have before feature engineering
             import sys
             print(f"DEBUG: Columns before engineering: {batch_pdf.columns.tolist()}", file=sys.stderr)
@@ -319,6 +322,7 @@ def predict_batch(
                 batch_pdf["trans_yyyymm"] = batch_pdf["trans_yyyymm"].astype(str)
 
             # Apply feature engineering to this batch
+            # This modifies batch_pdf to add engineered features
             batch_pdf = engineer_features(batch_pdf)
 
             # Debug: Check what columns we have after feature engineering
@@ -354,7 +358,7 @@ def predict_batch(
             if missing_cols:
                 print(f"DEBUG: Created missing columns with defaults: {missing_cols}", file=sys.stderr)
 
-            # Ensure correct data types for all features
+            # Ensure correct data types for all features (for model input)
             # Categorical features as strings
             for col in [
                 "gender",
@@ -395,25 +399,15 @@ def predict_batch(
             model_obj = broadcasted_model.value
             predictions = model_obj.predict(X_batch)
 
-            # Add prediction columns using the parameter name
-            batch_pdf[prediction_col] = predictions.astype(str)
-            batch_pdf["model_id"] = model_version
-            batch_pdf["timestamp"] = pd.to_datetime(ts)
-            batch_pdf["granularity"] = granularity
+            # Add prediction columns to the ORIGINAL dataframe (preserving original dtypes)
+            original_batch[prediction_col] = predictions.astype(str)
+            original_batch["model_id"] = model_version
+            original_batch["timestamp"] = pd.to_datetime(ts)
+            original_batch["granularity"] = granularity
 
             # Return only the columns that match the output schema
-            # This drops engineered feature columns and temporary columns
-            return batch_pdf[expected_output_cols]
-
-        # Add a partition key for grouping (process in chunks based on row number)
-        # This ensures we process data in manageable batches
-        from pyspark.sql.functions import floor, monotonically_increasing_id
-
-        batch_size = 10000  # Process 10k rows at a time
-
-        df_with_batch_id = base_df.withColumn("_row_id", monotonically_increasing_id())
-        df_with_batch_id = df_with_batch_id.withColumn(
-            "_batch_id", floor(df_with_batch_id["_row_id"] / batch_size)
+            # Using original_batch preserves the original column types
+            return original_batch[expected_output_cols]
         )
 
         print(f"🔀 Processing data in batches of {batch_size} rows")
