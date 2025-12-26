@@ -252,10 +252,15 @@ def predict_batch(
         "months_since_consent",
     ]
 
-    # Filter to only existing columns in the schema
-    available_cols = base_df.columns
-    feature_cols = [col for col in feature_cols if col in available_cols]
-    print(f"📊 Using {len(feature_cols)} features for prediction")
+    # NOTE: Do NOT filter feature_cols here!
+    # Some features are engineered during predict_batch_udf execution
+    # (policy_count, age, months_since_consent)
+    print(
+        f"📊 Using {len(feature_cols)} features for prediction (includes engineered features)"
+    )
+
+    # Check what base columns we have
+    print(f"📋 Base DataFrame columns: {base_df.columns}")
 
     # =============================================================================
     # Model Loading and Batch Prediction with pandas_udf
