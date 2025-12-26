@@ -248,17 +248,23 @@ def predict_batch(
     print(f"📊 Using {len(feature_cols)} features for prediction")
 
     # =============================================================================
-    # Model Loading and Batch Prediction with mapInPandas
+    # Model Loading and Batch Prediction with pandas_udf
     # =============================================================================
     print(f"🎯 Loading model for prediction: {model_uri}")
 
     try:
-        # Load model from MLflow registry
+        # Load model from MLflow registry on driver
         model = mlflow.pyfunc.load_model(model_uri)
         print(f"✅ Model loaded successfully")
 
+        # Broadcast the model to all executors for efficient distributed processing
+        broadcasted_model = spark_session.sparkContext.broadcast(model)
+        print(f"📡 Model broadcasted to executors")
+
         # Define the schema for the output
-        from pyspark.sql.types import StringType, StructField, StructType, TimestampType
+        import pandas as pd
+        from pyspark.sql.functions import PandasUDFType, pandas_udf
+        from pyspark.sql.types import StringType, StructField, TimestampType
 
         # Get the input schema and add prediction columns
         output_schema = base_df.schema.add(
@@ -272,57 +278,56 @@ def predict_batch(
             StructField("granularity", StringType(), True)
         )
 
-        # Function to apply feature engineering and predictions to each partition
-        def process_partition(iterator):
+        # Function to apply feature engineering and predictions using pandas_udf
+        @pandas_udf(output_schema, PandasUDFType.GROUPED_MAP)
+        def predict_batch_udf(batch_pdf):
             """
-            Process each partition independently to avoid memory issues.
-            This function runs on executors, not the driver.
+            Process each batch independently using the broadcasted model.
+            This function runs on executors with the broadcasted model available.
             """
-            from datetime import datetime
+            if len(batch_pdf) == 0:
+                return batch_pdf
 
-            import pandas as pd
+            # Apply feature engineering to this batch
+            batch_pdf = engineer_features(batch_pdf)
 
-            for batch_pdf in iterator:
-                if len(batch_pdf) == 0:
-                    continue
+            # Extract features for prediction
+            batch_feature_cols = [
+                col for col in feature_cols if col in batch_pdf.columns
+            ]
+            X_batch = batch_pdf[batch_feature_cols]
 
-                # Apply feature engineering to this batch
-                batch_pdf = engineer_features(batch_pdf)
+            # Get the broadcasted model and make predictions
+            model_obj = broadcasted_model.value
+            predictions = model_obj.predict(X_batch)
 
-                # Extract features for prediction
-                batch_feature_cols = [
-                    col for col in feature_cols if col in batch_pdf.columns
-                ]
-                X_batch = batch_pdf[batch_feature_cols]
+            # Add prediction columns
+            batch_pdf["prediction"] = predictions.astype(str)
+            batch_pdf["model_id"] = model_version
+            batch_pdf["timestamp"] = pd.to_datetime(ts)
+            batch_pdf["granularity"] = granularity
 
-                # Make predictions for this batch
-                predictions = model.predict(X_batch)
+            return batch_pdf
 
-                # Add prediction columns
-                batch_pdf["prediction"] = predictions.astype(str)
-                batch_pdf["model_id"] = model_version
-                batch_pdf["timestamp"] = pd.to_datetime(ts)
-                batch_pdf["granularity"] = granularity
+        # Add a partition key for grouping (process in chunks based on row number)
+        # This ensures we process data in manageable batches
+        from pyspark.sql.functions import floor, monotonically_increasing_id
 
-                yield batch_pdf
+        batch_size = 10000  # Process 10k rows at a time
 
-        # Repartition the data to process in smaller chunks (adjust num_partitions based on data size)
-        # Each partition will be processed independently by executors
-        num_partitions = max(
-            10, int(row_count / 10000)
-        )  # At least 10 partitions, or 1 per 10k rows
-        print(
-            f"🔀 Repartitioning data into {num_partitions} partitions for distributed processing"
+        df_with_batch_id = base_df.withColumn("_row_id", monotonically_increasing_id())
+        df_with_batch_id = df_with_batch_id.withColumn(
+            "_batch_id", floor(df_with_batch_id["_row_id"] / batch_size)
         )
 
-        repartitioned_df = base_df.repartition(num_partitions)
+        print(f"🔀 Processing data in batches of {batch_size} rows")
 
-        # Apply the processing function to each partition using mapInPandas
-        # This distributes the work across executors and avoids collecting to the driver
+        # Apply the UDF to each batch group
         print("🔮 Executing distributed batch predictions across executors...")
-        prediction_df = repartitioned_df.mapInPandas(
-            process_partition, schema=output_schema
-        )
+        prediction_df = df_with_batch_id.groupby("_batch_id").apply(predict_batch_udf)
+
+        # Drop the helper columns
+        prediction_df = prediction_df.drop("_row_id", "_batch_id")
 
         print(f"✅ Distributed prediction pipeline configured successfully")
 

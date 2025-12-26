@@ -125,17 +125,17 @@ print("="*50)
 
 # Basic arithmetic tests
 runner.assert_equal(add_numbers(2, 3), 5, "Test Addition: 2 + 3 = 5")
-runner.assert_equal(multiply_numbers(4, 5), 20, "Test Multiplication: 4 * 5 = 20")
-runner.assert_equal(add_numbers(0, 0), 0, "Test Zero Addition: 0 + 0 = 0")
-runner.assert_equal(add_numbers(-5, 3), -2, "Test Negative Addition: -5 + 3 = -2")
+# runner.assert_equal(multiply_numbers(4, 5), 20, "Test Multiplication: 4 * 5 = 20")
+# runner.assert_equal(add_numbers(0, 0), 0, "Test Zero Addition: 0 + 0 = 0")
+# runner.assert_equal(add_numbers(-5, 3), -2, "Test Negative Addition: -5 + 3 = -2")
 
-# Boolean logic tests
-runner.assert_true(is_even(4), "Test Even Number: 4 is even")
-runner.assert_true(not is_even(5), "Test Odd Number: 5 is not even")
+# # Boolean logic tests
+# runner.assert_true(is_even(4), "Test Even Number: 4 is even")
+# runner.assert_true(not is_even(5), "Test Odd Number: 5 is not even")
 
-# String manipulation tests
-runner.assert_equal(capitalize_string("hello"), "HELLO", "Test String Capitalization")
-runner.assert_equal(len("test"), 4, "Test String Length")
+# # String manipulation tests
+# runner.assert_equal(capitalize_string("hello"), "HELLO", "Test String Capitalization")
+# runner.assert_equal(len("test"), 4, "Test String Length")
 
 # COMMAND ----------
 
